@@ -1,0 +1,8 @@
+# Build files #
+*.d
+*.o
+assign2
+
+# File editing swaps #
+*~
+

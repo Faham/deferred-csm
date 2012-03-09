@@ -618,9 +618,8 @@ void Assignment2::DSPointLightsPass()
 			shaderUniforms.m_ds_AttenuationLinear = m_pointLight[i].Attenuation.Linear;
 			shaderUniforms.m_ds_AttenuationExp = m_pointLight[i].Attenuation.Exp;
 
-			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), gml::translate(m_pointLight[i].Position));
-			float BSphereScale = CalcPointLightBSphere(m_pointLight[i].Color, m_pointLight[i].DiffuseIntensity);
-			shaderUniforms.m_ds_PoinLightScale = gml::vec3_t(BSphereScale, BSphereScale, BSphereScale);
+			float _scale = CalcPointLightBSphere(m_pointLight[i].Color, m_pointLight[i].DiffuseIntensity);
+			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), gml::mul(gml::translate(m_pointLight[i].Position), gml::scaleh(_scale, _scale, _scale)));
 
 			if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
 

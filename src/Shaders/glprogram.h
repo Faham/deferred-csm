@@ -69,7 +69,6 @@ typedef enum
 #define UNIF_DS_ATTENCONSTANT "DSAttenuationConstant"
 #define UNIF_DS_ATTENLINEAR "DSAttenuationLinear"
 #define UNIF_DS_ATTENEXP "DSAttenuationExponential"
-#define UNIF_DS_PLSCALE "DSPointLightScale"
 #define UNIF_DS_DLDIRECTION "DSDirectionalLightDirection"
 #define UNIF_DS_POSTEX "DSPositionTexture"
 #define UNIF_DS_DIFFTEX "DSDiffuseTexture"
@@ -100,7 +99,6 @@ typedef enum
 	UNIFORM_DS_ATTENCONSTANT,
 	UNIFORM_DS_ATTENLINEAR,
 	UNIFORM_DS_ATTENEXP,
-	UNIFORM_DS_PLSCALE,  // Deferred shading point light scale
 	UNIFORM_DS_DLDIRECTION,
 	UNIFORM_DS_POSTEX,
 	UNIFORM_DS_DIFFTEX,
@@ -141,7 +139,6 @@ typedef struct _GLProgUniforms
 	GLfloat m_ds_AttenuationConstant;
 	GLfloat m_ds_AttenuationLinear;
 	GLfloat m_ds_AttenuationExp;
-	gml::vec3_t m_ds_PoinLightScale; // Deferred shading point light scale
 	gml::vec3_t m_ds_DirectionalLightDirection;
 	Texture::Texture *m_ds_PositionTexture;
 	Texture::Texture *m_ds_DiffuseTexture;

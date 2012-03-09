@@ -38,7 +38,6 @@ static const char fragShader[] =
 		"uniform float " UNIF_DS_ATTENCONSTANT ";\n"
 		"uniform float " UNIF_DS_ATTENLINEAR ";\n"
 		"uniform float " UNIF_DS_ATTENEXP ";\n"
-		"uniform vec3 " UNIF_DS_PLSCALE ";\n"
 		"uniform vec2 " UNIF_DS_SCREENSIZE ";\n"
 		"uniform sampler2D " UNIF_DS_POSTEX ";\n"
 		"uniform sampler2D " UNIF_DS_DIFFTEX ";\n"
@@ -65,7 +64,8 @@ static const char fragShader[] =
 				"DiffuseColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
-				"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
+				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
+				"vec3 VertexToEye = normalize(- WorldPos);\n"
 				"vec3 LightReflect = normalize(reflect(LightDirection, Normal));\n"
 				"float SpecularFactor = dot(VertexToEye, LightReflect);\n"
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"
@@ -104,7 +104,6 @@ PointLightPass::PointLightPass()
 			(m_program.getUniformID(UNIFORM_DS_ATTENCONSTANT) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_ATTENLINEAR) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_ATTENEXP) >= 0) &&
-			(m_program.getUniformID(UNIFORM_DS_PLSCALE) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_POSTEX) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_DIFFTEX) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_NORMTEX) >= 0) &&
@@ -127,7 +126,6 @@ bool PointLightPass::setUniforms(const GLProgUniforms &uniforms, const bool usin
 	glUniform1f(m_program.getUniformID(UNIFORM_DS_ATTENCONSTANT), uniforms.m_ds_AttenuationConstant);
 	glUniform1f(m_program.getUniformID(UNIFORM_DS_ATTENLINEAR), uniforms.m_ds_AttenuationLinear);
 	glUniform1f(m_program.getUniformID(UNIFORM_DS_ATTENEXP), uniforms.m_ds_AttenuationExp);
-	glUniform3fv(m_program.getUniformID(UNIFORM_DS_PLSCALE), 1, (GLfloat*)&uniforms.m_ds_PoinLightScale);
     glUniform2fv(m_program.getUniformID(UNIFORM_DS_SCREENSIZE), 1, (GLfloat*)&uniforms.m_ds_ScreenSize);
 
  	return !isGLError();

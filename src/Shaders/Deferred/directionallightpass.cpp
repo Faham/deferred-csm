@@ -57,7 +57,8 @@ static const char fragShader[] =
 				"DiffuseColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
-				"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
+				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
+				"vec3 VertexToEye = normalize(- WorldPos);\n"
 				"vec3 LightReflect = normalize(reflect(" UNIF_DS_DLDIRECTION ", Normal));\n"
 				"float SpecularFactor = dot(VertexToEye, LightReflect);\n"
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"

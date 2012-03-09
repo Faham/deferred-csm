@@ -192,6 +192,16 @@ bool Assignment2::init()
 			gml::mul(gml::translate(gml::vec3_t(0.0,1.5,0.0)), gml::scaleh(1.0,1.5,1.0)));
 
 	assert(obj == m_nObjects);
+
+#if defined (DEFERRED)
+	m_pointLightSphere = new Object::Object(m_geometry[SPHERE_LOC], mat,
+			gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(1.0,1.0,1.0)));
+	
+	m_directionalLightQuad = new Object::Object(m_geometry[PLANE_LOC], mat,
+			gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(1.0,1.0,1.0)));
+
+	InitLights();
+#endif
 		
 	// =============================================================================================
 
@@ -452,20 +462,58 @@ void Assignment2::rasterizeScene()
 
 #if defined (DEFERRED)
 
+void Assignment2::InitLights()
+{
+    m_spotLight.AmbientIntensity = 0.0f;
+    m_spotLight.DiffuseIntensity = 0.9f;
+	m_spotLight.Color = COLOR_WHITE;
+    m_spotLight.Attenuation.Linear = 0.01f;
+    m_spotLight.Position  = gml::vec3_t(-20.0, 20.0, 5.0f);
+    m_spotLight.Direction = gml::vec3_t(1.0f, -1.0f, 0.0f);
+    m_spotLight.Cutoff =  20.0f;
+
+	m_dirLight.AmbientIntensity = 0.1f;
+	m_dirLight.Color = COLOR_CYAN;
+	m_dirLight.DiffuseIntensity = 0.5f;
+	m_dirLight.Direction = gml::vec3_t(1.0f, 0.0f, 0.0f);
+
+	m_pointLight[0].DiffuseIntensity = 0.2f;
+	m_pointLight[0].Color = COLOR_GREEN;
+    m_pointLight[0].Position = gml::vec3_t(0.0f, 1.5f, 5.0f);
+	m_pointLight[0].Attenuation.Constant = 0.0f;
+    m_pointLight[0].Attenuation.Linear = 0.0f;
+    m_pointLight[0].Attenuation.Exp = 1.0f;
+
+	m_pointLight[1].DiffuseIntensity = 0.2f;
+	m_pointLight[1].Color = COLOR_RED;
+    m_pointLight[1].Position = gml::vec3_t(2.0f, 0.0f, 5.0f);
+	m_pointLight[1].Attenuation.Constant = 0.0f;
+    m_pointLight[1].Attenuation.Linear = 0.0f;
+    m_pointLight[1].Attenuation.Exp = 1.0f;
+    
+	m_pointLight[2].DiffuseIntensity = 0.2f;
+	m_pointLight[2].Color = COLOR_BLUE;
+    m_pointLight[2].Position = gml::vec3_t(0.0f, 0.0f, 3.0f);
+	m_pointLight[2].Attenuation.Constant = 0.0f;
+    m_pointLight[2].Attenuation.Linear = 0.0f;        
+    m_pointLight[2].Attenuation.Exp = 1.0f;
+}
+
 void Assignment2::rasterizeSceneDeferred()
 {
-/*	if (m_sRGBframebuffer)
+	if (m_sRGBframebuffer)
 	{
 		glEnable(GL_FRAMEBUFFER_SRGB_EXT);
 	}
 
-	// Turn on backface culling
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	// Turn on the depth buffer
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
+	// Only the Geometry Pass update the depth buffer
+	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
-*/
-	// Clear the pixel data & depth buffer
+	glDisable(GL_BLEND);
+	
+	// Clearing depth buffer happens only if glDepthMask(GL_TRUE); has enabled writing to depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (isGLError()) return;
@@ -504,9 +552,10 @@ void Assignment2::rasterizeSceneDeferred()
 		shader->unbindGL();
 	}
 
-	// Put the render state back the way we found it
 	glDisable(GL_CULL_FACE);
+	// No point in depth testing in light pass
 	glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
 
 	if (m_sRGBframebuffer)
 	{
@@ -524,11 +573,99 @@ void Assignment2::rasterizeSceneDeferred()
 void Assignment2::DSGeometryPass()
 {
     m_gbuffer.BindForWriting();
+	glViewport(0,0,m_windowWidth,m_windowHeight);
+	rasterizeSceneDeferred();
+}
+
+void Assignment2::BeginLightPasses()
+{
+	// this is for accumulating each lighting pass
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);
+	glBlendFunc(GL_ONE, GL_ONE);
+
+	m_gbuffer.BindForReading();
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+float CalcPointLightBSphere(const gml::vec3_t& Color, float Intensity)
+{
+   	float MaxChannel = fmax(fmax(Color.x, Color.y), Color.z);
+   	float c = MaxChannel * Intensity;
+   	return (8.0f * sqrtf(c) + 1.0f);
+}
+
+void Assignment2::DSPointLightsPass()
+{
+	Shader::GLProgUniforms shaderUniforms;
+	shaderUniforms.m_projection = m_camera.getProjection();
+	shaderUniforms.m_ds_ScreenSize = gml::vec2_t(m_windowWidth, m_windowHeight);
+
+	const Shader::Shader *shader = m_shaderManager.getDeferredPointLightPassShader();
+
+	if (shader->getIsReady(false))
+	{
+		shader->bindGL(false);
+		if (isGLError()) return;
+
+		for (unsigned int i = 0; i < m_nLight; ++i)
+		{
+			shaderUniforms.m_lightPos = m_pointLight[i].Position;
+			shaderUniforms.m_lightRad = m_pointLight[i].Color;
+			shaderUniforms.m_ds_AmbientIntensity = m_pointLight[i].AmbientIntensity;
+			shaderUniforms.m_ds_DiffuseIntensity = m_pointLight[i].DiffuseIntensity;
+			shaderUniforms.m_ds_AttenuationConstant = m_pointLight[i].Attenuation.Constant;
+			shaderUniforms.m_ds_AttenuationLinear = m_pointLight[i].Attenuation.Linear;
+			shaderUniforms.m_ds_AttenuationExp = m_pointLight[i].Attenuation.Exp;
+
+			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), gml::translate(m_pointLight[i].Position));
+			float BSphereScale = CalcPointLightBSphere(m_pointLight[i].Color, m_pointLight[i].DiffuseIntensity);
+			shaderUniforms.m_ds_PoinLightScale = gml::vec3_t(BSphereScale, BSphereScale, BSphereScale);
+
+			if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
+
+			m_pointLightSphere->rasterize();
+			if (isGLError()) return;
+		}
+		shader->unbindGL();
+	}
+	
+	glFinish();
+}
+
+void Assignment2::DSDirectionalLightPass()
+{
+	Shader::GLProgUniforms shaderUniforms;
+	shaderUniforms.m_projection = m_camera.getProjection();
+	shaderUniforms.m_ds_ScreenSize = gml::vec2_t(m_windowWidth, m_windowHeight);
+
+	const Shader::Shader *shader = m_shaderManager.getDeferredDirectionalLightPassShader();
+
+	if (shader->getIsReady(false))
+	{
+		shader->bindGL(false);
+		if (isGLError()) return;
+
+		shaderUniforms.m_lightRad = m_dirLight.Color;
+		shaderUniforms.m_ds_AmbientIntensity = m_dirLight.AmbientIntensity;
+		shaderUniforms.m_ds_DiffuseIntensity = m_dirLight.DiffuseIntensity;
+		shaderUniforms.m_ds_DirectionalLightDirection = gml::normalize(m_dirLight.Direction);
+
+		shaderUniforms.m_modelView = gml::identity4();
+
+		if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
+
+		m_directionalLightQuad->rasterize();
+		if (isGLError()) return;
+
+		shader->unbindGL();
+	}
+	
+	glFinish();
 }
 
 void Assignment2::DSLightPass()
 {
-	// TODO: make sure I need to use GL_DRAW_FRAMEBUFFER or GL_FRAMEBUFFER for this line
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -571,14 +708,14 @@ void Assignment2::repaint()
 #if defined (DEFERRED)
 
 	if (!m_gbuffer_inited) {
-	 	m_gbuffer.Init(/**/ m_windowWidth, m_windowHeight /*/ 640,480 /**/);
+	 	m_gbuffer.Init(m_windowWidth, m_windowHeight);
 	 	m_gbuffer_inited = true;
 	 }
 
     DSGeometryPass();
-	glViewport(0,0,m_windowWidth,m_windowHeight);
-	rasterizeSceneDeferred();
-    DSLightPass();
+ 	BeginLightPasses();
+	DSPointLightsPass();
+	DSDirectionalLightPass();
 #else
 	if (m_enableShadows)
 	{

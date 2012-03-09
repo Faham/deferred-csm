@@ -61,7 +61,16 @@ void GBuffer::BindForWriting()
 
 void GBuffer::BindForReading()
 {
+/*/ Test part
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
+//*/
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+		glActiveTexture(GL_TEXTURE0 + i);		
+		glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION + i]);
+	}
+//*/
 }
 
 void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType)

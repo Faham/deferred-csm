@@ -120,6 +120,17 @@ bool GLProgram::init(const char *vertCode, const char *fragCode)
 	m_uniformLocs[UNIFORM_PROJECTION] = glGetUniformLocation(m_prog, UNIF_PROJECTION);
 	m_uniformLocs[UNIFORM_NORMALTRANS] = glGetUniformLocation(m_prog, UNIF_NORMALTRANS);
 	m_uniformLocs[UNIFORM_SHADOWMAP] = glGetUniformLocation(m_prog, UNIF_SHADOWMAP);
+	m_uniformLocs[UNIFORM_DS_AMBIENTINTENCITY] = glGetUniformLocation(m_prog, UNIF_DS_AMBIENTINTENCITY);
+	m_uniformLocs[UNIFORM_DS_DIFFUSEINTENSITY] = glGetUniformLocation(m_prog, UNIF_DS_DIFFUSEINTENSITY);
+	m_uniformLocs[UNIFORM_DS_ATTENCONSTANT] = glGetUniformLocation(m_prog, UNIF_DS_ATTENCONSTANT);
+	m_uniformLocs[UNIFORM_DS_ATTENLINEAR] = glGetUniformLocation(m_prog, UNIF_DS_ATTENLINEAR);
+	m_uniformLocs[UNIFORM_DS_ATTENEXP] = glGetUniformLocation(m_prog, UNIF_DS_ATTENEXP);
+	m_uniformLocs[UNIFORM_DS_PLSCALE] = glGetUniformLocation(m_prog, UNIF_DS_PLSCALE);
+	m_uniformLocs[UNIFORM_DS_DLDIRECTION] = glGetUniformLocation(m_prog, UNIF_DS_DLDIRECTION);
+	m_uniformLocs[UNIFORM_DS_POSTEX] = glGetUniformLocation(m_prog, UNIF_DS_POSTEX);
+	m_uniformLocs[UNIFORM_DS_DIFFTEX] = glGetUniformLocation(m_prog, UNIF_DS_DIFFTEX);
+	m_uniformLocs[UNIFORM_DS_NORMTEX] = glGetUniformLocation(m_prog, UNIF_DS_NORMTEX);
+	m_uniformLocs[UNIFORM_DS_TEXCOORDTEX] = glGetUniformLocation(m_prog, UNIF_DS_TEXCOORDTEX);
 
 	return true;
 }

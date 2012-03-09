@@ -64,7 +64,18 @@ typedef enum
 #define UNIF_PROJECTION "projection"
 #define UNIF_NORMALTRANS "normalsTransform"
 #define UNIF_SHADOWMAP "shadowMap"
-
+#define UNIF_DS_AMBIENTINTENCITY "DSAmbientIntencity"
+#define UNIF_DS_DIFFUSEINTENSITY "DSDiffuseIntesity"
+#define UNIF_DS_ATTENCONSTANT "DSAttenuationConstant"
+#define UNIF_DS_ATTENLINEAR "DSAttenuationLinear"
+#define UNIF_DS_ATTENEXP "DSAttenuationExponential"
+#define UNIF_DS_PLSCALE "DSPointLightScale"
+#define UNIF_DS_DLDIRECTION "DSDirectionalLightDirection"
+#define UNIF_DS_POSTEX "DSPositionTexture"
+#define UNIF_DS_DIFFTEX "DSDiffuseTexture"
+#define UNIF_DS_NORMTEX "DSNormalTexture"
+#define UNIF_DS_TEXCOORDTEX "DSTexcoordTexture"
+#define UNIF_DS_SCREENSIZE "DSScreenSize"
 
 // enum that gives the offset into the GLProgram::m_uniformLocs[]
 // array to find the handle for a uniform.
@@ -84,6 +95,18 @@ typedef enum
 	UNIFORM_PROJECTION, // Projection matrix. mat4x4. view -> clip coordinates
 	UNIFORM_NORMALTRANS, // Matrix for transforming normals. mat4x4. = transpose(inverse(modelview))
 	UNIFORM_SHADOWMAP,  // CubeMap depth-texture for shadow mapping
+	UNIFORM_DS_AMBIENTINTENCITY,
+	UNIFORM_DS_DIFFUSEINTENSITY,
+	UNIFORM_DS_ATTENCONSTANT,
+	UNIFORM_DS_ATTENLINEAR,
+	UNIFORM_DS_ATTENEXP,
+	UNIFORM_DS_PLSCALE,  // Deferred shading point light scale
+	UNIFORM_DS_DLDIRECTION,
+	UNIFORM_DS_POSTEX,
+	UNIFORM_DS_DIFFTEX,
+	UNIFORM_DS_NORMTEX,
+	UNIFORM_DS_TEXCOORDTEX,
+	UNIFORM_DS_SCREENSIZE,
 	NUM_UNIFORM_VARS
 } UniformVars;
 
@@ -111,6 +134,20 @@ typedef struct _GLProgUniforms
 	gml::mat4x4_t m_modelView; // Modelview matrix
 	gml::mat4x4_t m_normalTrans; // Normal transform matrix. = transpose(inverse(modelview))
 	Texture::Texture *m_texture0; // Texture 0
+
+	// Deferred shading specific properties
+	GLfloat m_ds_AmbientIntensity;
+	GLfloat m_ds_DiffuseIntensity;
+	GLfloat m_ds_AttenuationConstant;
+	GLfloat m_ds_AttenuationLinear;
+	GLfloat m_ds_AttenuationExp;
+	gml::vec3_t m_ds_PoinLightScale; // Deferred shading point light scale
+	gml::vec3_t m_ds_DirectionalLightDirection;
+	Texture::Texture *m_ds_PositionTexture;
+	Texture::Texture *m_ds_DiffuseTexture;
+	Texture::Texture *m_ds_NormalTexture;
+	Texture::Texture *m_ds_TexcoordTexture;
+	gml::vec2_t m_ds_ScreenSize;
 } GLProgUniforms;
 
 class GLProgram

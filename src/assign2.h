@@ -31,6 +31,7 @@
 
 #if defined (DEFERRED)
 #include "Deferred/gbuffer.h"
+#include "Deferred/lights.h"
 #endif
 
 class Assignment2 : public UI::Callbacks
@@ -83,12 +84,22 @@ protected:
 	void rasterizeScene();
 
 #if defined (DEFERRED)
+	void InitLights();
 	void rasterizeSceneDeferred();
 	void DSGeometryPass();
-	void DSLightPass();
+	void DSLightPass();	// Testing GBuffer
+	void BeginLightPasses();
+	void DSPointLightsPass();
+	void DSDirectionalLightPass();
 
 	GBuffer m_gbuffer;
 	bool m_gbuffer_inited;
+	static const unsigned int m_nLight = 3;
+	Object::Object * m_pointLightSphere;
+	Object::Object * m_directionalLightQuad;
+	DirectionalLight m_dirLight;
+	SpotLight m_spotLight;
+	PointLight m_pointLight[m_nLight];
 #endif
 
 public:

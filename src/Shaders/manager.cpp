@@ -26,6 +26,8 @@
 #include "Texture/Specular/gouraud.h"
 #include "Texture/Specular/phong.h"
 #include "Deferred/geometrypass.h"
+#include "Deferred/pointlightpass.h"
+#include "Deferred/directionallightpass.h"
 
 namespace Shader
 {
@@ -43,6 +45,8 @@ typedef enum
 	TEXTURE_SPEC_GOURAUD,
 	TEXTURE_SPEC_PHONG,
 	DEFERRED_GEOMETRY_PASS,
+	DEFERRED_POINTLIGHT_PASS,
+	DEFERRED_DIRECTIONALLIGHT_PASS,
 	NUM_SHADERS
 } ShaderOffsets;
 
@@ -101,6 +105,12 @@ bool Manager::init()
 
 	m_shaders[DEFERRED_GEOMETRY_PASS] = new Deferred::GeometryPass();
 	if ( !m_shaders[DEFERRED_GEOMETRY_PASS] ) return false;
+
+	m_shaders[DEFERRED_POINTLIGHT_PASS] = new Deferred::PointLightPass();
+	if ( !m_shaders[DEFERRED_POINTLIGHT_PASS] ) return false;
+
+	m_shaders[DEFERRED_DIRECTIONALLIGHT_PASS] = new Deferred::DirectionalLightPass();
+	if ( !m_shaders[DEFERRED_DIRECTIONALLIGHT_PASS] ) return false;
 
 	return true;
 }
@@ -169,6 +179,16 @@ const Shader* Manager::getDepthShader() const
 const Shader* Manager::getDeferredGeometryPassShader() const
 {
 	return m_shaders[DEFERRED_GEOMETRY_PASS];
+}
+
+const Shader* Manager::getDeferredPointLightPassShader() const
+{
+	return m_shaders[DEFERRED_POINTLIGHT_PASS];
+}
+
+const Shader* Manager::getDeferredDirectionalLightPassShader() const
+{
+	return m_shaders[DEFERRED_DIRECTIONALLIGHT_PASS];
 }
 
 }

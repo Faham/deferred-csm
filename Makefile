@@ -68,6 +68,8 @@ OBJ_FILES = \
 	src/Objects/object.o \
 	src/Objects/geometry.o \
 	src/Shaders/Deferred/geometrypass.o \
+	src/Shaders/Deferred/directionallightpass.o \
+	src/Shaders/Deferred/pointlightpass.o \
 	src/Deferred/gbuffer.o
 
 

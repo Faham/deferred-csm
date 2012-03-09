@@ -53,6 +53,8 @@ public:
 	// Get the depth-only shader; shader that only outputs fragment depths.
 	const Shader* getDepthShader() const;
 	const Shader* getDeferredGeometryPassShader() const;
+	const Shader* getDeferredPointLightPassShader() const;
+	const Shader* getDeferredDirectionalLightPassShader() const;
 };
 
 }

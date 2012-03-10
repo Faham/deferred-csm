@@ -20,6 +20,7 @@
 #include "Objects/Models/sphere.h"
 #include "Objects/Models/octahedron.h"
 #include "Objects/Models/plane.h"
+#include "Objects/Models/quad.h"
 
 #include "Shaders/material.h"
 
@@ -59,12 +60,12 @@ Assignment2::Assignment2()
 	m_rotationSpeed = (40.0f * M_PI) / 180.0f; // Camera rotation speed = 40 degrees / second
 
 	// Is the framebuffer automatically gamma-correcting?
-	m_sRGBframebuffer = true;
+	m_sRGBframebuffer = false;
 	// Start with wireframe rendering turned off
 	m_renderWireframe = false;
 
 	m_shadowmapSize = 1024; // 32, 64, 128, 256, 512, 1024
-	m_enableShadows = true;
+	m_enableShadows = false;
 
 	m_lastIdleTime = UI::getTime();
 	
@@ -126,8 +127,9 @@ bool Assignment2::init()
 	const int SPHERE_LOC = 0;
 	const int OCTAHEDRON_LOC = 1;
 	const int PLANE_LOC = 2;
+	const int QUAD_LOC = 3;
 
-	m_nGeometry = 3;
+	m_nGeometry = 4;
 	m_geometry = new Object::Geometry*[m_nGeometry];
 	memset(m_geometry, 0x00, sizeof(Object::Geometry*)*m_nGeometry);
 
@@ -143,6 +145,12 @@ bool Assignment2::init()
 	}
 	m_geometry[PLANE_LOC] = new Object::Models::Plane();
 	if ( !m_geometry[PLANE_LOC] || !((Object::Models::Plane*)m_geometry[PLANE_LOC])->init() || isGLError())
+	{
+		return false;
+	}
+
+	m_geometry[QUAD_LOC] = new Object::Models::Quad();
+	if ( !m_geometry[QUAD_LOC] || !((Object::Models::Quad*)m_geometry[QUAD_LOC])->init() || isGLError())
 	{
 		return false;
 	}
@@ -197,8 +205,9 @@ bool Assignment2::init()
 	m_pointLightSphere = new Object::Object(m_geometry[SPHERE_LOC], mat,
 			gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(1.0,1.0,1.0)));
 	
-	m_directionalLightQuad = new Object::Object(m_geometry[PLANE_LOC], mat,
-			gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(1.0,1.0,1.0)));
+	m_directionalLightQuad = new Object::Object(m_geometry[QUAD_LOC], mat,
+				gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(1.0,1.0,1.0))
+			);
 
 	InitLights();
 #endif
@@ -473,7 +482,7 @@ void Assignment2::InitLights()
     m_spotLight.Cutoff =  20.0f;
 
 	m_dirLight.AmbientIntensity = 0.1f;
-	m_dirLight.Color = COLOR_CYAN;
+	m_dirLight.Color = COLOR_WHITE;
 	m_dirLight.DiffuseIntensity = 0.5f;
 	m_dirLight.Direction = gml::vec3_t(1.0f, 0.0f, 0.0f);
 
@@ -610,7 +619,8 @@ void Assignment2::DSPointLightsPass()
 
 		for (unsigned int i = 0; i < m_nLight; ++i)
 		{
-			shaderUniforms.m_lightPos = m_pointLight[i].Position;
+			//shaderUniforms.m_lightPos = m_pointLight[i].Position;
+			shaderUniforms.m_lightPos = gml::extract3(gml::mul(m_camera.getWorldView(), gml::vec4_t(m_pointLight[i].Position, 1.0f)));
 			shaderUniforms.m_lightRad = m_pointLight[i].Color;
 			shaderUniforms.m_ds_AmbientIntensity = m_pointLight[i].AmbientIntensity;
 			shaderUniforms.m_ds_DiffuseIntensity = m_pointLight[i].DiffuseIntensity;
@@ -711,10 +721,15 @@ void Assignment2::repaint()
 	 	m_gbuffer_inited = true;
 	 }
 
-    DSGeometryPass();
- 	BeginLightPasses();
-	DSPointLightsPass();
+	DSGeometryPass();
+#if defined (DEFERRED_DEBUG)
+	DSLightPass();
+#else
+	BeginLightPasses();
+	//DSPointLightsPass();
 	DSDirectionalLightPass();
+#endif
+
 #else
 	if (m_enableShadows)
 	{

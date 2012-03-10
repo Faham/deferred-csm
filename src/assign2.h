@@ -27,7 +27,8 @@
 #include "ShadowMapping/shadowmap.h"
 #include "UI/ui.h"
 
-#define DEFERRED
+//#define DEFERRED
+//#define DEFERRED_DEBUG
 
 #if defined (DEFERRED)
 #include "Deferred/gbuffer.h"

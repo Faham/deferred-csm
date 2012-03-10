@@ -1,4 +1,8 @@
 
+#pragma once
+#if !defined (GBUFFER_H)
+#define GBUFFER_H
+
 #include "../GL3/gl3w.h"
 
 class GBuffer
@@ -29,3 +33,6 @@ private:
     GLuint m_textures[GBUFFER_NUM_TEXTURES];
     GLuint m_depthTexture;
 };
+
+#endif // GBUFFER_H
+

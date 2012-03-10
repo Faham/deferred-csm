@@ -39,6 +39,7 @@ static const char fragShader[] =
 		"uniform sampler2D " UNIF_DS_POSTEX ";\n"
 		"uniform sampler2D " UNIF_DS_DIFFTEX ";\n"
 		"uniform sampler2D " UNIF_DS_NORMTEX ";\n"
+		"out vec4 FragColor;\n"
 		"void main(void) {\n"
 			"vec2 TexCoord = gl_FragCoord.xy / " UNIF_DS_SCREENSIZE ";\n"
 			"vec3 WorldPos = texture(" UNIF_DS_POSTEX ", TexCoord).xyz;\n"
@@ -58,7 +59,11 @@ static const char fragShader[] =
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
 				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
+
 				"vec3 VertexToEye = normalize(- WorldPos);\n"
+				"float gMatSpecularIntensity = 0.10f;\n"
+				"float gSpecularPower = 0.10f;\n"
+
 				"vec3 LightReflect = normalize(reflect(" UNIF_DS_DLDIRECTION ", Normal));\n"
 				"float SpecularFactor = dot(VertexToEye, LightReflect);\n"
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"
@@ -69,6 +74,7 @@ static const char fragShader[] =
 			//
 
 			"FragColor = vec4(Color, 1.0) * (AmbientColor + DiffuseColor + SpecularColor);\n"
+			//"FragColor.x += 1.0;\n"
 		"}";
 
 DirectionalLightPass::DirectionalLightPass()
@@ -95,6 +101,7 @@ DirectionalLightPass::DirectionalLightPass()
 			(m_program.getUniformID(UNIFORM_DS_DIFFTEX) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_NORMTEX) >= 0);
 }
+
 DirectionalLightPass::~DirectionalLightPass() {}
 
 

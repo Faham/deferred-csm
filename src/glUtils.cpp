@@ -10,11 +10,11 @@
  * of Saskatchewan.
  */
 
-#include "GL3/gl3w.h"
+#include <gl3/gl3w.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "glUtils.h"
+#include <glUtils.h>
 
 static const char *getErrorString(GLenum err)
 {

@@ -13,7 +13,7 @@ CXX = g++
 # Version #'s of the program
 
 # Flags for the preprocessor.
-CPPFLAGS =
+CPPFLAGS = -Iinclude
 
 # Our include directories
 LDFLAGS = -lGL -lglfw -lm -lXrandr -lpng
@@ -34,48 +34,45 @@ endif
 CXXFLAGS = $(CFLAGS) -std=c++0x
 
 OBJ_FILES = \
-	src/lodepng.o \
-	src/assign1.o \
-	src/assign2.o \
-	src/demo.o \
+	src/root.o \
 	src/main.o \
-	src/Camera/camera.o \
+	src/camera.o \
 	src/glUtils.o \
-	src/UI/ui.o \
-	src/GL3/gl3w.o \
-	src/Shaders/shader.o \
-	src/Shaders/manager.o \
-	src/Shaders/glprogram.o \
-	src/Shaders/material.o \
-	src/Shaders/Constant/Specular/gouraud.o \
-	src/Shaders/Constant/Specular/phong.o \
-	src/Shaders/Constant/Lambertian/gouraud.o \
-	src/Shaders/Constant/Lambertian/phong.o \
-	src/Shaders/Constant/simple.o \
-	src/Shaders/Constant/depth.o \
-	src/Shaders/Texture/Specular/gouraud.o \
-	src/Shaders/Texture/Specular/phong.o \
-	src/Shaders/Texture/Lambertian/gouraud.o\
-	src/Shaders/Texture/Lambertian/phong.o \
-	src/ShadowMapping/shadowmap.o \
-	src/Texture/texture.o \
-	src/Texture/Decoders/decoder.o \
-	src/Texture/Decoders/png.o \
-	src/Objects/mesh.o \
-	src/Objects/Models/sphere.o \
-	src/Objects/Models/octahedron.o \
-	src/Objects/Models/plane.o \
-	src/Objects/object.o \
-	src/Objects/geometry.o \
-	src/Shaders/Deferred/geometrypass.o \
-	src/Shaders/Deferred/directionallightpass.o \
-	src/Shaders/Deferred/pointlightpass.o \
-	src/Objects/Models/quad.o \
-	src/Deferred/gbuffer.o
+	src/ui.o \
+	src/gl3/gl3w.o \
+	src/shaders/shader.o \
+	src/shaders/manager.o \
+	src/shaders/glprogram.o \
+	src/shaders/material.o \
+	src/shaders/constant/specular/gouraud.o \
+	src/shaders/constant/specular/phong.o \
+	src/shaders/constant/lambertian/gouraud.o \
+	src/shaders/constant/lambertian/phong.o \
+	src/shaders/constant/simple.o \
+	src/shaders/constant/depth.o \
+	src/shaders/texture/specular/gouraud.o \
+	src/shaders/texture/specular/phong.o \
+	src/shaders/texture/lambertian/gouraud.o\
+	src/shaders/texture/lambertian/phong.o \
+	src/shadowmap.o \
+	src/texture/texture.o \
+	src/texture/decoders/decoder.o \
+	src/texture/decoders/png.o \
+	src/objects/mesh.o \
+	src/objects/models/sphere.o \
+	src/objects/models/octahedron.o \
+	src/objects/models/plane.o \
+	src/objects/object.o \
+	src/objects/geometry.o \
+	src/shaders/deferred/geometrypass.o \
+	src/shaders/deferred/directionallightpass.o \
+	src/shaders/deferred/pointlightpass.o \
+	src/objects/models/quad.o \
+	src/gbuffer.o
 
 
 # What are we going to call our executable
-OUT_FILE = assign2
+OUT_FILE = FahamNegini-fan780-Deferred-CSM
 
 debug: $(OBJ_FILES)
 	$(CXX) $(CXXFLAGS) $(OBJ_FILES) -o $(OUT_FILE) $(LDFLAGS)

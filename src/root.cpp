@@ -69,7 +69,7 @@ Root::Root()
 
 	m_lastIdleTime = UI::getTime();
 	
-#if defined (DEFERRED)
+#if defined (PIPELINE_DEFERRED)
 	m_gbuffer_inited = false;
 #endif
 }
@@ -201,7 +201,7 @@ bool Root::init()
 
 	assert(obj == m_nObjects);
 
-#if defined (DEFERRED)
+#if defined (PIPELINE_DEFERRED)
 	m_pointLightSphere = new Object::Object(m_geometry[SPHERE_LOC], mat,
 			gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(1.0,1.0,1.0)));
 	
@@ -469,7 +469,7 @@ void Root::rasterizeScene()
 	glFinish();
 }
 
-#if defined (DEFERRED)
+#if defined (PIPELINE_DEFERRED)
 
 void Root::InitLights()
 {
@@ -714,7 +714,7 @@ void Root::repaint()
 	 * and pretty much every time through the event loop.
 	 */
 
-#if defined (DEFERRED)
+#if defined (PIPELINE_DEFERRED)
 
 	if (!m_gbuffer_inited) {
 	 	m_gbuffer.Init(m_windowWidth, m_windowHeight);
@@ -722,7 +722,7 @@ void Root::repaint()
 	 }
 
 	DSGeometryPass();
-#if defined (DEFERRED_DEBUG)
+#if defined (PIPELINE_DEFERRED_DEBUG)
 	DSLightPass();
 #else
 	BeginLightPasses();

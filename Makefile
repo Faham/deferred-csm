@@ -64,6 +64,7 @@ OBJ_FILES = \
 	src/objects/models/plane.o \
 	src/objects/object.o \
 	src/objects/geometry.o \
+	src/external/lodepng.o \
 	src/shaders/deferred/geometrypass.o \
 	src/shaders/deferred/directionallightpass.o \
 	src/shaders/deferred/pointlightpass.o \

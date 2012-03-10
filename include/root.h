@@ -28,7 +28,7 @@
 #include <shadowmap.h>
 #include <ui.h>
 
-#if defined (DEFERRED)
+#if defined (PIPELINE_DEFERRED)
 #include <gbuffer.h>
 #include <lights.h>
 #endif
@@ -82,7 +82,7 @@ protected:
 	// Rasterize the scene with full color shaders
 	void rasterizeScene();
 
-#if defined (DEFERRED)
+#if defined (PIPELINE_DEFERRED)
 	void InitLights();
 	void rasterizeSceneDeferred();
 	void DSGeometryPass();

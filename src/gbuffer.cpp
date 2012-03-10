@@ -26,7 +26,7 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
 
 	for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures) ; i++) {
 		glBindTexture(GL_TEXTURE_2D, m_textures[i]);
-#if !defined (DEFERRED_DEBUG)
+#if !defined (PIPELINE_DEFERRED_DEBUG)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 #endif
@@ -66,7 +66,7 @@ void GBuffer::BindForWriting()
 
 void GBuffer::BindForReading()
 {
-#if defined (DEFERRED_DEBUG)
+#if defined (PIPELINE_DEFERRED_DEBUG)
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
 #else
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

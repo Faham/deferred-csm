@@ -15,17 +15,19 @@
 
 #include <texture/texture.h>
 #include <gl3/gl3w.h>
-#include <texture/decoders/png.h>
 #include <glUtils.h>
+#include <config.h>
 
-#if defined (LODEPNG)
-#include <external/lodepng.h>
+#if defined (PNG_LOADER_LIBPNG)
+	#include <texture/decoders/png.h>
+#elif defined (PNG_LOADER_LODEPNG)
+	#include <external/lodepng.h>
 #endif
 
 namespace Texture
 {
 
-#if defined (LODEPNG)
+#if defined (PNG_LOADER_LODEPNG)
 GLuint createTexture(const char* filename)
 {
 	std::vector< unsigned char > rawImage;
@@ -96,7 +98,7 @@ Texture::Texture(const char *filename,
 		FilterType minFilter, FilterType magFilter,
 		WrapMode wrap)
 {
-#if !defined (LODEPNG)
+#if defined (PNG_LOADER_LIBPNG)
 	m_filename = strdup(filename);
 	m_minFilter = minFilter;
 	m_magFilter = magFilter;
@@ -187,7 +189,7 @@ Texture::Texture(const char *filename,
 	}
 
 	m_isReady = glIsTexture(m_handle) == GL_TRUE;
-#else
+#elif defined (PNG_LOADER_LODEPNG)
 	m_handle = createTexture(filename);
 	m_isReady = glIsTexture(m_handle) == GL_TRUE;
 #endif

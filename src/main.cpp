@@ -24,7 +24,8 @@
 
 int main(int argc, char *argv[])
 {
-	if ( !UI::init(640,480) || isGLError() )
+	unsigned int w = 640, h = 480;
+	if ( !UI::init(w, h) || isGLError() )
 	{
 		fprintf(stderr, "ERROR: Could not initialize UI.\n");
 		UI::shutdown();
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
 	// Create & initialize the program object
 	UI::Callbacks *program;
 
-	program = new Root();
+	program = new Root(w, h);
 	if ( ! ((Root*)program)->init() )
 	{
 		fprintf(stderr, "Failed to initialize program\n");

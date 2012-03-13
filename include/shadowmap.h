@@ -1,4 +1,6 @@
 
+//==============================================================================
+
 /*
  * Copyright:
  * Daniel D. Neilson (ddneilson@ieee.org)
@@ -14,59 +16,59 @@
 #ifndef __INC_SHADOWMAP_H_
 #define __INC_SHADOWMAP_H_
 
+//==============================================================================
+
 #include <gl3/gl3.h>
 #include <camera.h>
 #include <shaders/manager.h>
 #include <objects/object.h>
+#include <lights.h>
+#include <vector>
 
-// Maximum distance of effect for a light
-#define SHADOWMAP_NEAR 1.0f
-#define SHADOWMAP_NEAR_STR "1.0f"
-#define SHADOWMAP_FAR 50.0f
-#define SHADOWMAP_FAR_STR "50.0f"
+//==============================================================================
 
 class ShadowMap
 {
-public:
-	// Cameras centered on the light, with 90 degree FOV,
-	// pointing in each direction along every axis
-	Camera m_cameras[6];
+private:
 
-	// The shadowmap itself. This is a handle
-	// to a cube map.
+	typedef std::vector<Camera*> CameraVec;
+	
+	CameraVec m_cameras;
 	GLuint m_shadowmap;
-
-	// Framebuffer object to use when creating shadowmap
 	GLuint m_fbo;
-
 	int m_shadowMapSize;
-
-	// Shader manager from which to obtain the depth shader
 	const Shader::Manager *m_manager;
-
-	// True iff the shadow map texture has been properly created
 	bool m_isReady;
+	LightType m_type;
+	float m_near;
+	float m_far;
+
+	void setupCamera();
+		
 public:
-	ShadowMap();
+	ShadowMap(LightType lt, const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
+		, const gml::vec3_t & target = gml::vec3_t(0, 0, -1)
+		, const gml::vec3_t & up = gml::vec3_t(0, 1, 0));
 	~ShadowMap();
 
-	// Initialize the shadowmap
-	//  smapSize = width & height of shadow map textures; in pixels.
-	// Return true if successful.
 	bool init(const int smapSize, const Shader::Manager *manager);
 
-	// Create a shadowmap from the given light position
-	// -- lightPos is expected in world coordinates
-	// --
-	// The shadowmap will be created relative to the camera-space
-	// coordinates of the light source
 	void create(const Object::Object **scene, const GLuint nSceneObjects,
-				const gml::vec4_t &lightPos, const Camera &mainCamera);
+				const Camera &mainCamera
+				, const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
+				, const gml::vec3_t & target = gml::vec3_t(0, 0, -1)
+				, const gml::vec3_t & up = gml::vec3_t(0, 1, 0));
 
-	// Bind the shadow map to the given texture unit
 	void bindGL(GLenum textureUnit) const;
 	void unbindGL(GLenum textureUnit) const;
+	bool isReady() const { return m_isReady; }
+	void setNear(const float & n) { m_near = n; }
+	void setFar(const float & f) { m_far = f; }
 };
 
+//==============================================================================
 
-#endif /* SHADOWMAP_H_ */
+#endif // __INC_SHADOWMAP_H_
+
+//==============================================================================
+

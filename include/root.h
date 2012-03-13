@@ -1,4 +1,6 @@
 
+//==============================================================================
+
 /*
  * Copyright:
  * Daniel D. Neilson (ddneilson@ieee.org)
@@ -10,13 +12,13 @@
  * of Saskatchewan.
  */
 
-/*
- * Program Object class for CMPT 485/829 Assignment #2
- */
+//==============================================================================
 
 #pragma once
 #ifndef __INC_ROOT_H_
 #define __INC_ROOT_H_
+
+//==============================================================================
 
 #include <config.h>
 #include <gml/gml.h>
@@ -33,60 +35,44 @@
 #include <lights.h>
 #endif
 
+//==============================================================================
+
 class Root : public UI::Callbacks
 {
 protected:
-	gml::vec4_t m_lightPos;
-	gml::vec3_t m_lightRad;
-	gml::vec3_t m_ambientRad;
-
 	Shader::Manager m_shaderManager;
-
 	Camera m_camera;
+	Texture::Texture *m_texture;
 
-	int m_windowWidth, m_windowHeight;
+	typedef std::vector<Object::Object*> ObjectVec;
+	ObjectVec m_scene;
 
-	// Objects in the scene to render
-	Object::Object **m_scene;
-	GLuint m_nObjects;
+	typedef std::vector<Object::Geometry*> GeometryVec;
+	GeometryVec m_geometries;
 
-	// Array of geometry that has been allocated
-	// so that we can delete it.
-	Object::Geometry **m_geometry;
-	GLuint m_nGeometry;
+	unsigned int m_width;
+	unsigned int m_height;
 
-	// Members for keyboard camera control
 	int m_cameraMovement;
 	double m_lastCamMoveTime;
 
-	float m_movementSpeed; // Number of units/second to move
-	float m_rotationSpeed; // radians/sec to rotate
-
-	// Flag indicating whether the framebuffer is automatically doing gamma correction.
+	float m_movementSpeed;
+	float m_rotationSpeed;
 	bool m_sRGBframebuffer;
-
-	// Whether to render in wireframe or not
 	bool m_renderWireframe;
-
-	Texture::Texture *m_texture;
-
-	int m_shadowmapSize;
-	ShadowMap m_shadowmap;
 	bool m_enableShadows;
 
 	// For animation
 	double m_lastIdleTime; // Time that idle was last called
-
 	void toggleCameraMoveDirection(bool enable, int direction);
-
-	// Rasterize the scene with full color shaders
-	void rasterizeScene();
 
 #if defined (PIPELINE_DEFERRED)
 	void InitLights();
 	void rasterizeSceneDeferred();
 	void DSGeometryPass();
-	void DSLightPass();	// Testing GBuffer
+#if defined (PIPELINE_DEFERRED_DEBUG)
+	void DSLightPass();
+#endif
 	void BeginLightPasses();
 	void DSPointLightsPass();
 	void DSDirectionalLightPass();
@@ -94,15 +80,17 @@ protected:
 	GBuffer m_gbuffer;
 	bool m_gbuffer_inited;
 	static const unsigned int m_nLight = 3;
-	Object::Object * m_pointLightSphere;
-	Object::Object * m_directionalLightQuad;
+	Object::Object * m_dummySphere;
+	Object::Object * m_dummyQuad;
 	DirectionalLight m_dirLight;
 	SpotLight m_spotLight;
 	PointLight m_pointLight[m_nLight];
+#else
+	void rasterizeScene();
 #endif
 
 public:
-	Root();
+	Root(unsigned int w, unsigned int h);
 	virtual ~Root();
 
 	bool init();
@@ -113,4 +101,9 @@ public:
 	virtual void idle();
 };
 
+//==============================================================================
+
 #endif
+
+//==============================================================================
+

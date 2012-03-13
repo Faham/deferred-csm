@@ -27,10 +27,17 @@
 
 //==============================================================================
 
+#define SHADOWMAP_NEAR 1.0f
+#define SHADOWMAP_NEAR_STR "1.0f"
+#define SHADOWMAP_FAR 50.0f
+#define SHADOWMAP_FAR_STR "50.0f"
+
 class ShadowMap
 {
 private:
 
+	typedef std::vector<Object::Object*> ObjectVec;
+	typedef std::vector<Object::Geometry*> GeometryVec;
 	typedef std::vector<Camera*> CameraVec;
 	
 	CameraVec m_cameras;
@@ -43,7 +50,9 @@ private:
 	float m_near;
 	float m_far;
 
-	void setupCamera();
+	void setupCamera(LightType lt, const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
+		, const gml::vec3_t & target = gml::vec3_t(0, 0, -1)
+		, const gml::vec3_t & up = gml::vec3_t(0, 1, 0));
 		
 public:
 	ShadowMap(LightType lt, const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
@@ -51,10 +60,9 @@ public:
 		, const gml::vec3_t & up = gml::vec3_t(0, 1, 0));
 	~ShadowMap();
 
-	bool init(const int smapSize, const Shader::Manager *manager);
+	bool init(const unsigned int & smapSize, const Shader::Manager *manager);
 
-	void create(const Object::Object **scene, const GLuint nSceneObjects,
-				const Camera &mainCamera
+	void create(const ObjectVec & scene, const gml::mat4x4_t &worldview
 				, const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
 				, const gml::vec3_t & target = gml::vec3_t(0, 0, -1)
 				, const gml::vec3_t & up = gml::vec3_t(0, 1, 0));

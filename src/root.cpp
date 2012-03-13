@@ -31,6 +31,10 @@
 #include <root.h>
 #include <colors.h>
 
+#if defined (PIPELINE_DEFERRED)
+#include <lights.h>
+#endif
+
 //==============================================================================
 
 static const int CAMERA_FORWARD = 0x001;
@@ -57,6 +61,7 @@ Root::Root(unsigned int w, unsigned int h)
 	, m_sRGBframebuffer(false)
 	, m_renderWireframe(false)
 	, m_enableShadows(true)
+	, m_shadowmapSize(512)
 #if defined (PIPELINE_DEFERRED)
 	, m_gbuffer_inited(false)
 #endif
@@ -103,19 +108,19 @@ bool Root::init()
 	const int PLANE_LOC = 2;
 	const int QUAD_LOC = 3;
 
-	m_geometries.insert(new Object::Models::Sphere());
+	m_geometries.push_back(new Object::Models::Sphere());
 	if ( !m_geometries[SPHERE_LOC] || !((Object::Models::Sphere*)m_geometries[SPHERE_LOC])->init(3) || isGLError() )
 		return false;
 
-	m_geometries.insert(new Object::Models::Octahedron());
+	m_geometries.push_back(new Object::Models::Octahedron());
 	if ( !m_geometries[OCTAHEDRON_LOC] || !((Object::Models::Octahedron*)m_geometries[OCTAHEDRON_LOC])->init() || isGLError())
 		return false;
 
-	m_geometries.insert(new Object::Models::Plane());
+	m_geometries.push_back(new Object::Models::Plane());
 	if ( !m_geometries[PLANE_LOC] || !((Object::Models::Plane*)m_geometries[PLANE_LOC])->init() || isGLError())
 		return false;
 
-	m_geometries.insert(new Object::Models::Quad());
+	m_geometries.push_back(new Object::Models::Quad());
 	if ( !m_geometries[QUAD_LOC] || !((Object::Models::Quad*)m_geometries[QUAD_LOC])->init() || isGLError())
 		return false;
 
@@ -131,30 +136,33 @@ bool Root::init()
 
 	mat.setSpecExp(-1.0f); // turn off specular
 
-	mat.setSurfReflectance(C_BEIGE);
-	m_scene.insert(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,-sz/2,0.0)), gml::scaleh(sz, 1.0, sz))));
-	m_scene.insert(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,sz/2,0.0)), gml::mul(gml::rotateZh(2*pi2),gml::scaleh(sz, 1.0, sz)))));
-	mat.setSurfReflectance(C_GREEN);
-	m_scene.insert(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(sz/2,0.0,0.0)), gml::mul(gml::rotateZh(pi2),gml::scaleh(sz, 1.0, sz)))));
-	m_scene.insert(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(-sz/2,0.0,0.0)), gml::mul(gml::rotateZh(-pi2),gml::scaleh(sz, 1.0, sz)))));
-	mat.setSurfReflectance(C_RED);
-	m_scene.insert(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,sz/2)), gml::mul(gml::rotateXh(-pi2),gml::scaleh(sz, 1.0, sz)))));
-	m_scene.insert(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,-sz/2)), gml::mul(gml::rotateXh(pi2),gml::scaleh(sz, 1.0, sz)))));
+	mat.setSurfReflectance(Color::BEIGE);
+	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,-sz/2,0.0)), gml::scaleh(sz, 1.0, sz))));
+	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,sz/2,0.0)), gml::mul(gml::rotateZh(2*pi2),gml::scaleh(sz, 1.0, sz)))));
+	mat.setSurfReflectance(Color::GREEN);
+	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(sz/2,0.0,0.0)), gml::mul(gml::rotateZh(pi2),gml::scaleh(sz, 1.0, sz)))));
+	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(-sz/2,0.0,0.0)), gml::mul(gml::rotateZh(-pi2),gml::scaleh(sz, 1.0, sz)))));
+	mat.setSurfReflectance(Color::RED);
+	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,sz/2)), gml::mul(gml::rotateXh(-pi2),gml::scaleh(sz, 1.0, sz)))));
+	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,-sz/2)), gml::mul(gml::rotateXh(pi2),gml::scaleh(sz, 1.0, sz)))));
 
-	m_scene.insert(new Object::Object(m_geometries[SPHERE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(2.5,0.75,1.5))));
-	m_scene.insert(new Object::Object(m_geometries[OCTAHEDRON_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,1.5,0.0)), gml::scaleh(1.0,1.5,1.0))));
+	m_scene.push_back(new Object::Object(m_geometries[SPHERE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(2.5,0.75,1.5))));
+	m_scene.push_back(new Object::Object(m_geometries[OCTAHEDRON_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,1.5,0.0)), gml::scaleh(1.0,1.5,1.0))));
 
 #if defined (PIPELINE_DEFERRED)
-	m_pointLightSphere = new Object::Object(m_geometries[SPHERE_LOC], mat, gml::identity());
-	m_directionalLightQuad = new Object::Object(m_geometries[QUAD_LOC], mat, gml::identity());
-	InitLights();
+	m_dummySphere = new Object::Object(m_geometries[SPHERE_LOC], mat, gml::identity4());
+	m_dummyQuad = new Object::Object(m_geometries[QUAD_LOC], mat, gml::identity4());
+	initLights();
 #endif
-		
-	if ( !m_shadowmap.init(m_shadowmapSize, &m_shaderManager) )
-	{
-		fprintf(stderr, "Failed to initialize shadow mapping members.\n");
-		return false;
-	}
+
+#if defined (DO_SHADOW)
+	for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
+		if ((*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
+		{
+			fprintf(stderr, "Failed to initialize shadow mapping members.\n");
+			return false;
+		}
+#endif
 
 	printf(
 			"Camera movement:\n"
@@ -309,41 +317,56 @@ void Root::specialKeyboard(UI::KeySpecial_t key, UI::ButtonState_t state)
 
 #if defined (PIPELINE_DEFERRED)
 
-void Root::InitLights()
+void Root::initLights()
 {
-    m_spotLight.AmbientIntensity = 0.0f;
-    m_spotLight.DiffuseIntensity = 0.9f;
-	m_spotLight.Radiance = C_WHITE;
-    m_spotLight.Attenuation.Linear = 0.01f;
-    m_spotLight.Position  = gml::vec3_t(-20.0, 20.0, 5.0f);
-    m_spotLight.Direction = gml::vec3_t(1.0f, -1.0f, 0.0f);
-    m_spotLight.Cutoff =  20.0f;
+	Light * l1 = new Light();
+    l1->Type = LT_SPOT;
+    l1->AmbientIntensity = 0.0f;
+    l1->DiffuseIntensity = 0.9f;
+	l1->Radiance = Color::WHITE;
+    l1->LinearAttenuation = 0.01f;
+    l1->Position  = gml::vec3_t(-20.0, 20.0, 5.0f);
+    l1->Direction = gml::vec3_t(1.0f, -1.0f, 0.0f);
+    l1->Cutoff =  20.0f;
+	m_lights.push_back(l1);
 
-	m_dirLight.AmbientIntensity = 0.1f;
-	m_dirLight.Radiance = C_WHITE;
-	m_dirLight.DiffuseIntensity = 0.5f;
-	m_dirLight.Direction = gml::vec3_t(1.0f, 0.0f, 0.0f);
+	Light * l2 = new Light();
+    l2->Type = LT_DIRECTIONAL;
+	l2->AmbientIntensity = 0.1f;
+	l2->Radiance = Color::WHITE;
+	l2->DiffuseIntensity = 0.5f;
+	l2->Direction = gml::vec3_t(1.0f, 0.0f, 0.0f);
+	m_lights.push_back(l2);
 
-	m_pointLight[0].DiffuseIntensity = 0.2f;
-	m_pointLight[0].Radiance = C_GREEN;
-    m_pointLight[0].Position = gml::vec3_t(0.0f, 1.5f, 5.0f);
-	m_pointLight[0].Attenuation.Constant = 0.0f;
-    m_pointLight[0].Attenuation.Linear = 0.0f;
-    m_pointLight[0].Attenuation.Exp = 1.0f;
+	Light * l3 = new Light();
+    l3->Type = LT_POINT;
+	l3->DiffuseIntensity = 0.2f;
+	l3->Radiance = Color::GREEN;
+    l3->Position = gml::vec3_t(0.0f, 1.5f, 5.0f);
+	l3->ConstantAttenuation = 0.0f;
+    l3->LinearAttenuation = 0.0f;
+    l3->ExpAttenuation = 1.0f;
+	m_lights.push_back(l3);
 
-	m_pointLight[1].DiffuseIntensity = 0.2f;
-	m_pointLight[1].Radiance = C_RED;
-    m_pointLight[1].Position = gml::vec3_t(2.0f, 0.0f, 5.0f);
-	m_pointLight[1].Attenuation.Constant = 0.0f;
-    m_pointLight[1].Attenuation.Linear = 0.0f;
-    m_pointLight[1].Attenuation.Exp = 1.0f;
+	Light * l4 = new Light();
+    l4->Type = LT_POINT;
+	l4->DiffuseIntensity = 0.2f;
+	l4->Radiance = Color::RED;
+    l4->Position = gml::vec3_t(2.0f, 0.0f, 5.0f);
+	l4->ConstantAttenuation = 0.0f;
+    l4->LinearAttenuation = 0.0f;
+    l4->ExpAttenuation = 1.0f;
+	m_lights.push_back(l4);
     
-	m_pointLight[2].DiffuseIntensity = 0.2f;
-	m_pointLight[2].Radiance = C_BLUE;
-    m_pointLight[2].Position = gml::vec3_t(0.0f, 0.0f, 3.0f);
-	m_pointLight[2].Attenuation.Constant = 0.0f;
-    m_pointLight[2].Attenuation.Linear = 0.0f;        
-    m_pointLight[2].Attenuation.Exp = 1.0f;
+	Light * l5 = new Light();
+    l5->Type = LT_POINT;
+	l5->DiffuseIntensity = 0.2f;
+	l5->Radiance = Color::BLUE;
+    l5->Position = gml::vec3_t(0.0f, 0.0f, 3.0f);
+	l5->ConstantAttenuation = 0.0f;
+    l5->LinearAttenuation = 0.0f;        
+    l5->ExpAttenuation = 1.0f;
+	m_lights.push_back(l5);
 }
 
 //------------------------------------------------------------------------------
@@ -376,7 +399,7 @@ void Root::rasterizeSceneDeferred()
 		{
 			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), (*itr)->getObjectToWorld());
 			shaderUniforms.m_normalTrans = gml::transpose(gml::inverse(shaderUniforms.m_modelView));
-			m_scene[i]->getMaterial().getTexture()->bindGL(GL_TEXTURE0);
+			(*itr)->getMaterial().getTexture()->bindGL(GL_TEXTURE0);
 
 			if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
 
@@ -445,23 +468,27 @@ void Root::DSPointLightsPass()
 		shader->bindGL(false);
 		if (isGLError()) return;
 
-		for (unsigned int i = 0; i < m_nLight; ++i)
+		for (LightVec::iterator itr = m_lights.begin(); itr < m_lights.end(); ++itr)
 		{
-			//shaderUniforms.m_lightPos = m_pointLight[i].Position;
-			shaderUniforms.m_lightPos = gml::extract3(gml::mul(m_camera.getWorldView(), gml::vec4_t(m_pointLight[i].Position, 1.0f)));
-			shaderUniforms.m_lightRad = m_pointLight[i].Color;
-			shaderUniforms.m_ds_AmbientIntensity = m_pointLight[i].AmbientIntensity;
-			shaderUniforms.m_ds_DiffuseIntensity = m_pointLight[i].DiffuseIntensity;
-			shaderUniforms.m_ds_AttenuationConstant = m_pointLight[i].Attenuation.Constant;
-			shaderUniforms.m_ds_AttenuationLinear = m_pointLight[i].Attenuation.Linear;
-			shaderUniforms.m_ds_AttenuationExp = m_pointLight[i].Attenuation.Exp;
+			Light& lit = **itr;
+			if (lit.Type != LT_POINT)
+				continue;
+			lit.bindShadow(GL_TEXTURE3);
+			if (isGLError()) return;
+			shaderUniforms.m_lightPos = gml::extract3(gml::mul(m_camera.getWorldView(), gml::vec4_t(lit.Position, 1.0f)));
+			shaderUniforms.m_lightRad = lit.Radiance;
+			shaderUniforms.m_ds_AmbientIntensity = lit.AmbientIntensity;
+			shaderUniforms.m_ds_DiffuseIntensity = lit.DiffuseIntensity;
+			shaderUniforms.m_ds_AttenuationConstant = lit.ConstantAttenuation;
+			shaderUniforms.m_ds_AttenuationLinear = lit.LinearAttenuation;
+			shaderUniforms.m_ds_AttenuationExp = lit.ExpAttenuation;
 
-			float _scale = CalcPointLightBSphere(m_pointLight[i].Color, m_pointLight[i].DiffuseIntensity);
-			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), gml::mul(gml::translate(m_pointLight[i].Position), gml::scaleh(_scale, _scale, _scale)));
+			float _scale = CalcPointLightBSphere(lit.Radiance, lit.DiffuseIntensity);
+			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), gml::mul(gml::translate(lit.Position), gml::scaleh(_scale, _scale, _scale)));
 
 			if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
 
-			m_pointLightSphere->rasterize();
+			m_dummySphere->rasterize();
 			if (isGLError()) return;
 		}
 		shader->unbindGL();
@@ -486,16 +513,23 @@ void Root::DSDirectionalLightPass()
 		shader->bindGL(false);
 		if (isGLError()) return;
 
-		shaderUniforms.m_lightRad = m_dirLight.Color;
-		shaderUniforms.m_ds_AmbientIntensity = m_dirLight.AmbientIntensity;
-		shaderUniforms.m_ds_DiffuseIntensity = m_dirLight.DiffuseIntensity;
-		shaderUniforms.m_ds_DirectionalLightDirection = gml::extract3(gml::normalize(gml::mul(m_camera.getWorldView(), gml::vec4_t(m_dirLight.Direction, 1.0))));
+		for (LightVec::iterator itr = m_lights.begin(); itr < m_lights.end(); ++itr)
+		{
+			Light& lit = **itr;
+			if (lit.Type != LT_DIRECTIONAL)
+				continue;
+			lit.bindShadow(GL_TEXTURE3);
+			if (isGLError()) return;
+			shaderUniforms.m_lightRad = lit.Radiance;
+			shaderUniforms.m_ds_AmbientIntensity = lit.AmbientIntensity;
+			shaderUniforms.m_ds_DiffuseIntensity = lit.DiffuseIntensity;
+			shaderUniforms.m_ds_DirectionalLightDirection = gml::extract3(gml::normalize(gml::mul(m_camera.getWorldView(), gml::vec4_t(lit.Direction, 1.0))));
 
-		if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
+			if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
 
-		m_directionalLightQuad->rasterize();
-		if (isGLError()) return;
-
+			m_dummyQuad->rasterize();
+			if (isGLError()) return;
+		}
 		shader->unbindGL();
 	}
 	
@@ -636,13 +670,14 @@ void Root::repaint()
 	 	m_gbuffer.Init(m_width, m_height);
 	 	m_gbuffer_inited = true;
 	 }
-
+#if defined (DO_SHADOW)
 	if (m_enableShadows)
 	{
-		m_shadowmap.create((const Object::Object**)m_scene, m_nObjects, gml::vec4_t(m_pointLight[0].Position, 1.0f), m_camera);
-		m_shadowmap.bindGL(GL_TEXTURE3);
+		for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
+			(*itr)->createShadow(m_scene, m_camera);
 		if ( isGLError() ) return;
 	}
+#endif
 
 	DSGeometryPass();
 #if defined (PIPELINE_DEFERRED_DEBUG)

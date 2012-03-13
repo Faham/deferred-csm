@@ -8,11 +8,23 @@
 //==============================================================================
 
 #include <gml/gml.h>
-#include <shadowmap.h>
+#include <ui.h>
+#include <vector>
+#include <shaders/manager.h>
+#include <camera.h>
 
 //==============================================================================
 
+class ShadowMap;
+
+namespace Object 
+{
+	class Object; 
+	class Geometry;
+}
+
 enum LightType {
+	LT_NONE,
 	LT_DIRECTIONAL,
 	LT_POINT,
 	LT_SPOT
@@ -20,72 +32,32 @@ enum LightType {
 
 //==============================================================================
 
-struct BaseLight
+class Light
 {
+public:
 	gml::vec3_t Radiance;
+	gml::vec3_t Position;
+	gml::vec3_t Direction;
 	gml::vec3_t AmbientRadiance;
+	LightType Type;
 	float AmbientIntensity;
 	float DiffuseIntensity;
-
-	BaseLight()
-		: Radiance(0.6f,0.6f,0.6f)
-		, AmbientRadiance(0.025f, 0.025f, 0.025f)
-		, AmbientIntensity(0.0f)
-		, DiffuseIntensity(0.0f)
-	{
-	}
-};
-
-//==============================================================================
-
-struct DirectionalLight : public BaseLight
-{        
-	gml::vec3_t Direction;
-	ShadowMap m_shadowmap;
-
-	DirectionalLight()
-		: m_shadowmap(LT_DIRECTIONAL)
-		, Direction(0.0f, 0.0f, 0.0f)
-	{
-	}
-};
-
-//==============================================================================
-
-struct PointLight : public BaseLight
-{
-	gml::vec3_t Position;
-	ShadowMap m_shadowmap;
-
-	struct
-	{
-		float Constant;
-		float Linear;
-		float Exp;
-	} Attenuation;
-
-	PointLight()
-		: m_shadowmap(LT_POINT)
-		, Position(0.0f, 0.0f, 0.0f)
-	{
-		Attenuation.Constant = 0.0f;
-		Attenuation.Linear = 0.0f;
-		Attenuation.Exp = 0.0f;
-	}
-};
-
-//==============================================================================
-
-struct SpotLight : public PointLight
-{
-	gml::vec3_t Direction;
 	float Cutoff;
+	float ConstantAttenuation;
+	float LinearAttenuation;
+	float ExpAttenuation;
 
-	SpotLight()
-		: Direction(0.0f, 0.0f, 0.0f)
-		, Cutoff(0.0f)
-	{
-	}
+private:
+	ShadowMap* mp_shadowmap;
+
+public:
+	typedef std::vector<Object::Object*> ObjectVec;
+	typedef std::vector<Object::Geometry*> GeometryVec;
+
+	Light();
+	bool initShadow(const unsigned int & shadow_size, Shader::Manager * shader_manager);	
+	void createShadow(const ObjectVec & scene, const Camera &mainCamera);
+	void bindShadow(GLenum textureUnit);
 };
 
 //==============================================================================

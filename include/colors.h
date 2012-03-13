@@ -10,14 +10,15 @@
 
 //==============================================================================
 
-static const gml::vec3_t C_WHITE (1.0f, 1.0f, 1.0f);
-static const gml::vec3_t C_RED (1.0f, 0.0f, 0.0f);
-static const gml::vec3_t C_GREEN (0.0f, 1.0f, 0.0f);
-static const gml::vec3_t C_CYAN (0.0f, 1.0f, 1.0f);
-static const gml::vec3_t C_BLUE (0.0f, 0.0f, 1.0f);
-static const gml::vec3_t C_BEIGE(0.76, 0.75, 0.5);
-static const gml::vec3_t C_RED(0.63, 0.06, 0.04);
-static const gml::vec3_t C_GREEN(0.15, 0.48, 0.09);
+class Color {
+public:
+	static const gml::vec3_t WHITE;
+	static const gml::vec3_t RED;
+	static const gml::vec3_t GREEN;
+	static const gml::vec3_t BLUE;
+	static const gml::vec3_t CYAN;
+	static const gml::vec3_t BEIGE;
+};
 
 //==============================================================================
 

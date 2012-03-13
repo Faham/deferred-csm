@@ -68,6 +68,8 @@ OBJ_FILES = \
 	src/shaders/deferred/geometrypass.o \
 	src/shaders/deferred/directionallightpass.o \
 	src/shaders/deferred/pointlightpass.o \
+	src/lights.o \
+	src/colors.o \
 	src/objects/models/quad.o \
 	src/gbuffer.o
 

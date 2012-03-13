@@ -21,10 +21,12 @@
 #include <gl3/gl3w.h>
 #include <glUtils.h>
 #include <shaders/manager.h>
+#include <lights.h>
 
 //==============================================================================
 
-ShadowMap::	ShadowMap(LightType lt)
+ShadowMap::	ShadowMap(LightType lt, const gml::vec3_t & position
+		, const gml::vec3_t & target, const gml::vec3_t & up)
 {
 	m_fbo = 0;
 	m_shadowmap = 0;
@@ -32,14 +34,15 @@ ShadowMap::	ShadowMap(LightType lt)
 	m_near = 1.0;
 	m_far = 50.0;
 	m_shadowMapSize = 512;
-	Shader::Manager *m_manager = null;
+	Shader::Manager *m_manager = NULL;
 	m_isReady = false;
-	setupCamera();
+	setupCamera(lt, position, target, up);
 }
 
 //------------------------------------------------------------------------------
 
-ShadowMap::setupCamera(LightType lt, gml::vec3_t position, gml::vec3_t target, gml::vec3_t up)
+void ShadowMap::setupCamera(LightType lt, const gml::vec3_t & position
+						, const gml::vec3_t & target, const gml::vec3_t & up)
 {
 	if (LT_POINT == lt)
 	{
@@ -66,18 +69,18 @@ ShadowMap::setupCamera(LightType lt, gml::vec3_t position, gml::vec3_t target, g
 			cam->setAspect(1.0f);
 			cam->setDepthClip(m_near, m_far);
 			
-			m_cameras.insert(cam);
+			m_cameras.push_back(cam);
 		}
 	}
 	else if (LT_DIRECTIONAL == lt)
 	{
 		Camera* cam = new Camera();
 		
-		cam->lookAt(position, targets, up);
+		cam->lookAt(position, target, up);
 		cam->setFOV(M_PI * 0.5f);
 		cam->setAspect(1.0f);
 		cam->setDepthClip(m_near, m_far);
-		m_cameras.insert(cam);
+		m_cameras.push_back(cam);
 	}
 }
 
@@ -92,7 +95,7 @@ ShadowMap::~ShadowMap()
 
 //------------------------------------------------------------------------------
 
-bool ShadowMap::init(const int smapSize, const Shader::Manager *manager)
+bool ShadowMap::init(const unsigned int & smapSize, const Shader::Manager *manager)
 {
 	glGenFramebuffers(1, &m_fbo);
 
@@ -119,8 +122,8 @@ bool ShadowMap::init(const int smapSize, const Shader::Manager *manager)
 	
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		// TODO: Check two following options
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
@@ -136,9 +139,9 @@ bool ShadowMap::init(const int smapSize, const Shader::Manager *manager)
 
 //------------------------------------------------------------------------------
 
-void ShadowMap::create(const Object::Object **scene, const GLuint nSceneObjects,
-					const Camera &mainCamera, const gml::vec3_t & position
-					, const gml::vec3_t & target, const gml::vec3_t & up)
+void ShadowMap::create(const ObjectVec & scene, const gml::mat4x4_t &worldview
+					, const gml::vec3_t & position, const gml::vec3_t & target
+					, const gml::vec3_t & up)
 {
 
 	if ( !m_isReady )
@@ -159,15 +162,15 @@ void ShadowMap::create(const Object::Object **scene, const GLuint nSceneObjects,
 	
 	if (LT_POINT == m_type)
 	{
-		gml::vec3_t _light_pos = gml::extract3(gml::mul(mainCamera.getWorldView(), gml::vec4_t(position, 1.0)));
+		gml::vec3_t _light_pos = gml::extract3(gml::mul(worldview, gml::vec4_t(position, 1.0)));
 		for (unsigned short i = 0; i < 6; ++i)
 			m_cameras[i]->setPosition(_light_pos);
 	}
 	else if (LT_DIRECTIONAL == m_type)
 	{
-		gml::vec3_t _light_pos = gml::extract3(gml::mul(mainCamera.getWorldView(), gml::vec4_t(position, 1.0)));
-		gml::vec3_t _light_target = gml::extract3(gml::mul(mainCamera.getWorldView(), gml::vec4_t(target, 1.0)));
-		gml::vec3_t _light_up = gml::extract3(gml::mul(mainCamera.getWorldView(), gml::vec4_t(up, 1.0)));
+		gml::vec3_t _light_pos = gml::extract3(gml::mul(worldview, gml::vec4_t(position, 1.0)));
+		gml::vec3_t _light_target = gml::extract3(gml::mul(worldview, gml::vec4_t(target, 1.0)));
+		gml::vec3_t _light_up = gml::extract3(gml::mul(worldview, gml::vec4_t(up, 1.0)));
 		m_cameras[0]->lookAt(_light_pos, _light_target, _light_up);
 	}
 		
@@ -188,15 +191,15 @@ void ShadowMap::create(const Object::Object **scene, const GLuint nSceneObjects,
 				Shader::GLProgUniforms shaderUniforms;
 				shaderUniforms.m_projection = m_cameras[i]->getProjection();
 
-				for (GLuint j = 0; j < nSceneObjects; ++j)
+				for (ObjectVec::const_iterator itr = scene.begin(); itr != scene.end(); ++itr)
 				{
 					shaderUniforms.m_modelView = gml::mul(m_cameras[i]->getWorldView(), 
-						gml::mul(mainCamera.getWorldView(), scene[j]->getObjectToWorld()));
+						gml::mul(worldview, (*itr)->getObjectToWorld()));
 					shaderUniforms.m_normalTrans = gml::transpose( gml::inverse(shaderUniforms.m_modelView) );
 
 					if ( !_pdptshdr->setUniforms(shaderUniforms, false) || isGLError() ) return;
 
-					scene[j]->rasterize();
+					(*itr)->rasterize();
 					if (isGLError()) return;
 				}
 		
@@ -218,15 +221,15 @@ void ShadowMap::create(const Object::Object **scene, const GLuint nSceneObjects,
 			Shader::GLProgUniforms shaderUniforms;
 			shaderUniforms.m_projection = m_cameras[0]->getProjection();
 
-			for (GLuint j = 0; j < nSceneObjects; ++j)
+			for (ObjectVec::const_iterator itr = scene.begin(); itr != scene.end(); ++itr)
 			{
 				shaderUniforms.m_modelView = gml::mul(m_cameras[0]->getWorldView(), 
-					gml::mul(mainCamera.getWorldView(), scene[j]->getObjectToWorld()));
+					gml::mul(worldview, (*itr)->getObjectToWorld()));
 				shaderUniforms.m_normalTrans = gml::transpose( gml::inverse(shaderUniforms.m_modelView) );
 
 				if ( !_pdptshdr->setUniforms(shaderUniforms, false) || isGLError() ) return;
 
-				scene[j]->rasterize();
+				(*itr)->rasterize();
 				if (isGLError()) return;
 			}
 	

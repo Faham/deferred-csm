@@ -32,22 +32,24 @@
 
 #if defined (PIPELINE_DEFERRED)
 #include <gbuffer.h>
-#include <lights.h>
+class Light;
 #endif
 
 //==============================================================================
 
 class Root : public UI::Callbacks
 {
+public:
+	typedef std::vector<Object::Object*> ObjectVec;
+	typedef std::vector<Object::Geometry*> GeometryVec;
+
 protected:
 	Shader::Manager m_shaderManager;
 	Camera m_camera;
 	Texture::Texture *m_texture;
 
-	typedef std::vector<Object::Object*> ObjectVec;
 	ObjectVec m_scene;
 
-	typedef std::vector<Object::Geometry*> GeometryVec;
 	GeometryVec m_geometries;
 
 	unsigned int m_width;
@@ -61,13 +63,13 @@ protected:
 	bool m_sRGBframebuffer;
 	bool m_renderWireframe;
 	bool m_enableShadows;
-
+	unsigned int m_shadowmapSize;
 	// For animation
 	double m_lastIdleTime; // Time that idle was last called
 	void toggleCameraMoveDirection(bool enable, int direction);
 
 #if defined (PIPELINE_DEFERRED)
-	void InitLights();
+	void initLights();
 	void rasterizeSceneDeferred();
 	void DSGeometryPass();
 #if defined (PIPELINE_DEFERRED_DEBUG)
@@ -79,12 +81,12 @@ protected:
 
 	GBuffer m_gbuffer;
 	bool m_gbuffer_inited;
-	static const unsigned int m_nLight = 3;
 	Object::Object * m_dummySphere;
 	Object::Object * m_dummyQuad;
-	DirectionalLight m_dirLight;
-	SpotLight m_spotLight;
-	PointLight m_pointLight[m_nLight];
+		
+	typedef std::vector<Light*> LightVec;
+	LightVec m_lights;
+
 #else
 	void rasterizeScene();
 #endif

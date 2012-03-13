@@ -15,6 +15,7 @@
 
 #include <shaders/deferred/directionallightpass.h>
 #include <glUtils.h>
+#include <config.h>
 
 namespace Shader
 {
@@ -45,17 +46,16 @@ static const char fragShader[] =
 			"vec3 WorldPos = texture(" UNIF_DS_POSTEX ", TexCoord).xyz;\n"
 			"vec3 Color = texture(" UNIF_DS_DIFFTEX ", TexCoord).xyz;\n"
 			"vec3 Normal = texture(" UNIF_DS_NORMTEX ", TexCoord).xyz;\n"
-			"Normal = normalize(Normal);\n"
 
 			// Lighting Internals
-			"vec4 AmbientColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_AMBIENTINTENCITY ";\n"
+			"vec3 AmbientColor = " UNIF_LIGHTRAD " * " UNIF_DS_AMBIENTINTENCITY ";\n"
 			"float DiffuseFactor = dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
 
-			"vec4 DiffuseColor  = vec4(0, 0, 0, 0);\n"
-			"vec4 SpecularColor = vec4(0, 0, 0, 0);\n"
+			"vec3 DiffuseColor  = vec3(0, 0, 0);\n"
+			"vec3 SpecularColor = vec3(0, 0, 0);\n"
 
 			"if (DiffuseFactor > 0) {\n"
-				"DiffuseColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
+				"DiffuseColor = " UNIF_LIGHTRAD " * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
 				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
@@ -68,12 +68,13 @@ static const char fragShader[] =
 				"float SpecularFactor = dot(VertexToEye, LightReflect);\n"
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"
 				"if (SpecularFactor > 0) {\n"
-					"SpecularColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * gMatSpecularIntensity * SpecularFactor;\n"
+					"SpecularColor = " UNIF_LIGHTRAD " * gMatSpecularIntensity * SpecularFactor;\n"
 				"}\n"
 			"}\n"
 			//
 
-			"FragColor = vec4(Color, 1.0) * (AmbientColor + DiffuseColor + SpecularColor);\n"
+			"FragColor = vec4(clamp(Color * (AmbientColor + DiffuseColor + SpecularColor), 0.0, 1.0), 1.0);\n"
+			
 			//"FragColor.x += 1.0;\n"
 		"}";
 

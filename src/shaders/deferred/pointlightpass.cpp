@@ -15,6 +15,7 @@
 
 #include <shaders/deferred/pointlightpass.h>
 #include <glUtils.h>
+#include <config.h>
 
 namespace Shader
 {
@@ -42,6 +43,9 @@ static const char fragShader[] =
 		"uniform sampler2D " UNIF_DS_POSTEX ";\n"
 		"uniform sampler2D " UNIF_DS_DIFFTEX ";\n"
 		"uniform sampler2D " UNIF_DS_NORMTEX ";\n"
+#if defined (DO_SHADOW)
+		"uniform samplerCubeShadow " UNIF_SHADOWMAP ";\n"
+#endif
 		"out vec4 FragColor;\n"
 		"void main(void) {\n"
 			"vec2 TexCoord = gl_FragCoord.xy / " UNIF_DS_SCREENSIZE ";\n"
@@ -54,37 +58,46 @@ static const char fragShader[] =
 			"float Distance = length(LightDirection);\n"
 			"LightDirection = normalize(LightDirection);\n"
 
+#if defined (DO_SHADOW)
+			" float notShadow = texture(" UNIF_SHADOWMAP ", vec4(-LightDirection, Distance));\n"
+#endif
 			// Lighting Internals
-			"vec4 AmbientColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_AMBIENTINTENCITY ";\n"
+			"vec3 AmbientColor = " UNIF_LIGHTRAD " * " UNIF_DS_AMBIENTINTENCITY ";\n"
+#if defined (DO_SHADOW)
+			"float DiffuseFactor = notShadow * dot(Normal, -LightDirection);\n"
+#else
 			"float DiffuseFactor = dot(Normal, -LightDirection);\n"
-
-			"vec4 DiffuseColor  = vec4(0, 0, 0, 0);\n"
-			"vec4 SpecularColor = vec4(0, 0, 0, 0);\n"
+#endif
+			"vec3 DiffuseColor  = vec3(0, 0, 0);\n"
+			"vec3 SpecularColor = vec3(0, 0, 0);\n"
 
 			"if (DiffuseFactor > 0) {\n"
-				"DiffuseColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
+				"DiffuseColor = " UNIF_LIGHTRAD " * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
 				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
-				
-				"vec3 VertexToEye = normalize(- WorldPos);\n"
+				"vec3 VertexToEye = normalize(-WorldPos);\n"
 				"float gMatSpecularIntensity = 0.10f;\n"
 				"float gSpecularPower = 0.10f;\n"
 				
 				"vec3 LightReflect = normalize(reflect(LightDirection, Normal));\n"
 				"float SpecularFactor = dot(VertexToEye, LightReflect);\n"
+#if defined (DO_SHADOW)
+				"SpecularFactor = notShadow * pow(SpecularFactor, gSpecularPower);\n"
+#else
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"
+#endif
 				"if (SpecularFactor > 0) {\n"
-					"SpecularColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * gMatSpecularIntensity * SpecularFactor;\n"
+					"SpecularColor = " UNIF_LIGHTRAD " * gMatSpecularIntensity * SpecularFactor;\n"
 				"}\n"
 			"}\n"
 			//
 
-			"vec4 _color = AmbientColor + DiffuseColor + SpecularColor;\n"
+			"vec3 _color = AmbientColor + DiffuseColor + SpecularColor;\n"
 			"float Attenuation =  " UNIF_DS_ATTENCONSTANT " + " UNIF_DS_ATTENLINEAR " * Distance + " UNIF_DS_ATTENEXP " * Distance * Distance;\n"
 			"Attenuation = min(1.0, Attenuation);\n"
 
-			"FragColor = vec4(Color, 1.0) * _color / Attenuation;\n"
+			"FragColor = vec4(clamp(Color * _color / Attenuation, 0.0, 1.0), 1.0);\n"
 		"}";
 
 PointLightPass::PointLightPass()
@@ -112,7 +125,11 @@ PointLightPass::PointLightPass()
 			(m_program.getUniformID(UNIFORM_DS_POSTEX) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_DIFFTEX) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_NORMTEX) >= 0) &&
-			(m_program.getUniformID(UNIFORM_DS_SCREENSIZE) >= 0);
+			(m_program.getUniformID(UNIFORM_DS_SCREENSIZE) >= 0)
+#if defined (DO_SHADOW)
+			&& (m_program.getUniformID(UNIFORM_SHADOWMAP) >= 0)
+#endif
+			;
 }
 PointLightPass::~PointLightPass() {}
 
@@ -122,6 +139,9 @@ bool PointLightPass::setUniforms(const GLProgUniforms &uniforms, const bool usin
 	glUniform1i(m_program.getUniformID(UNIFORM_DS_POSTEX), 0);
 	glUniform1i(m_program.getUniformID(UNIFORM_DS_DIFFTEX), 1);
 	glUniform1i(m_program.getUniformID(UNIFORM_DS_NORMTEX), 2);
+#if defined (DO_SHADOW)
+	glUniform1i(m_program.getUniformID(UNIFORM_SHADOWMAP), 3);
+#endif
 	glUniformMatrix4fv(m_program.getUniformID(UNIFORM_MODELVIEW), 1, GL_FALSE, (GLfloat*)&uniforms.m_modelView);
 	glUniformMatrix4fv(m_program.getUniformID(UNIFORM_PROJECTION), 1, GL_FALSE, (GLfloat*)&uniforms.m_projection);
 	glUniform3fv(m_program.getUniformID(UNIFORM_LIGHTPOS), 1, (GLfloat*)&uniforms.m_lightPos);

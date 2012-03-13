@@ -65,7 +65,7 @@ Root::Root()
 	m_renderWireframe = false;
 
 	m_shadowmapSize = 1024; // 32, 64, 128, 256, 512, 1024
-	m_enableShadows = false;
+	m_enableShadows = true;
 
 	m_lastIdleTime = UI::getTime();
 	
@@ -546,7 +546,7 @@ void Root::rasterizeSceneDeferred()
 		{
 			// Object-specific uniforms
 			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), m_scene[i]->getObjectToWorld());
-			shaderUniforms.m_normalTrans = gml::transpose( gml::inverse(shaderUniforms.m_modelView) );
+			shaderUniforms.m_normalTrans = gml::transpose(gml::inverse(shaderUniforms.m_modelView));
 			m_scene[i]->getMaterial().getTexture()->bindGL(GL_TEXTURE0);
 
 			// Set the shader uniform variables
@@ -720,12 +720,19 @@ void Root::repaint()
 	 	m_gbuffer_inited = true;
 	 }
 
+	if (m_enableShadows)
+	{
+		m_shadowmap.create((const Object::Object**)m_scene, m_nObjects, gml::vec4_t(m_pointLight[0].Position, 1.0f), m_camera);
+		m_shadowmap.bindGL(GL_TEXTURE3);
+		if ( isGLError() ) return;
+	}
+
 	DSGeometryPass();
 #if defined (PIPELINE_DEFERRED_DEBUG)
 	DSLightPass();
-#else
+#else	
 	BeginLightPasses();
-	//DSPointLightsPass();
+	DSPointLightsPass();
 	DSDirectionalLightPass();
 #endif
 

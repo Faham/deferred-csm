@@ -35,7 +35,6 @@ static const char vertShader[] =
 		"void main(void) {\n"
 		" vec4 p = " UNIF_MODELVIEW " * vec4(position, 1.0);\n"
 		" gl_Position = " UNIF_PROJECTION " * p;\n"
-		// TODO: I'm not sure about the transformation of position. It should be in world coordinate or ModelView?
 		" o_position = p.xyz;\n"
 		" o_texCoord = texCoord;\n"
 		" o_normal = (" UNIF_NORMALTRANS " * vec4(normal,0.0)).xyz;\n"

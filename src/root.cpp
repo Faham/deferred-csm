@@ -375,7 +375,7 @@ void Root::rasterizeSceneDeferred()
 		for (ObjectVec::iterator itr = m_scene.begin(); itr != m_scene.end(); ++itr)
 		{
 			shaderUniforms.m_modelView = gml::mul(m_camera.getWorldView(), (*itr)->getObjectToWorld());
-			shaderUniforms.m_normalTrans = gml::transpose( gml::inverse(shaderUniforms.m_modelView) );
+			shaderUniforms.m_normalTrans = gml::transpose(gml::inverse(shaderUniforms.m_modelView));
 			m_scene[i]->getMaterial().getTexture()->bindGL(GL_TEXTURE0);
 
 			if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
@@ -477,6 +477,7 @@ void Root::DSDirectionalLightPass()
 	Shader::GLProgUniforms shaderUniforms;
 	shaderUniforms.m_projection = m_camera.getProjection();
 	shaderUniforms.m_ds_ScreenSize = gml::vec2_t(m_width, m_height);
+	shaderUniforms.m_modelView = gml::identity4();
 
 	const Shader::Shader *shader = m_shaderManager.getDeferredDirectionalLightPassShader();
 
@@ -488,9 +489,7 @@ void Root::DSDirectionalLightPass()
 		shaderUniforms.m_lightRad = m_dirLight.Color;
 		shaderUniforms.m_ds_AmbientIntensity = m_dirLight.AmbientIntensity;
 		shaderUniforms.m_ds_DiffuseIntensity = m_dirLight.DiffuseIntensity;
-		shaderUniforms.m_ds_DirectionalLightDirection = gml::normalize(m_dirLight.Direction);
-
-		shaderUniforms.m_modelView = gml::identity4();
+		shaderUniforms.m_ds_DirectionalLightDirection = gml::extract3(gml::normalize(gml::mul(m_camera.getWorldView(), gml::vec4_t(m_dirLight.Direction, 1.0))));
 
 		if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
 
@@ -638,10 +637,17 @@ void Root::repaint()
 	 	m_gbuffer_inited = true;
 	 }
 
+	if (m_enableShadows)
+	{
+		m_shadowmap.create((const Object::Object**)m_scene, m_nObjects, gml::vec4_t(m_pointLight[0].Position, 1.0f), m_camera);
+		m_shadowmap.bindGL(GL_TEXTURE3);
+		if ( isGLError() ) return;
+	}
+
 	DSGeometryPass();
 #if defined (PIPELINE_DEFERRED_DEBUG)
 	DSLightPass();
-#else
+#else	
 	BeginLightPasses();
 	DSPointLightsPass();
 	DSDirectionalLightPass();

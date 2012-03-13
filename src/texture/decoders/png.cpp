@@ -70,11 +70,11 @@ void *PNGDecoder::decode(FILE *ifile,
 		return 0;
 	}
 
-//#if (PNG_LIBPNG_VER < 10400 || PNG_LIBPNG_VER >= 10500)
+#if (PNG_LIBPNG_VER < 10400 || PNG_LIBPNG_VER >= 10500)
 	if (setjmp(png_jmpbuf(png_ptr)))	{
-//#else
-//	if (setjmp(png_ptr->jmpbuf))	{
-//#endif
+#else
+	if (setjmp(png_ptr->jmpbuf))	{
+#endif
 		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 		fsetpos(ifile, &filePos);
 		return 0;

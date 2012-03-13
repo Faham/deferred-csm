@@ -647,6 +647,7 @@ void Root::DSDirectionalLightPass()
 	Shader::GLProgUniforms shaderUniforms;
 	shaderUniforms.m_projection = m_camera.getProjection();
 	shaderUniforms.m_ds_ScreenSize = gml::vec2_t(m_windowWidth, m_windowHeight);
+	shaderUniforms.m_modelView = gml::identity4();
 
 	const Shader::Shader *shader = m_shaderManager.getDeferredDirectionalLightPassShader();
 
@@ -658,9 +659,7 @@ void Root::DSDirectionalLightPass()
 		shaderUniforms.m_lightRad = m_dirLight.Color;
 		shaderUniforms.m_ds_AmbientIntensity = m_dirLight.AmbientIntensity;
 		shaderUniforms.m_ds_DiffuseIntensity = m_dirLight.DiffuseIntensity;
-		shaderUniforms.m_ds_DirectionalLightDirection = gml::normalize(m_dirLight.Direction);
-
-		shaderUniforms.m_modelView = gml::identity4();
+		shaderUniforms.m_ds_DirectionalLightDirection = gml::extract3(gml::normalize(gml::mul(m_camera.getWorldView(), gml::vec4_t(m_dirLight.Direction, 1.0))));
 
 		if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
 

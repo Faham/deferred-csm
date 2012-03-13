@@ -61,8 +61,8 @@ static const char fragShader[] =
 				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
 
 				"vec3 VertexToEye = normalize(- WorldPos);\n"
-				"float gMatSpecularIntensity = 0.10f;\n"
-				"float gSpecularPower = 0.10f;\n"
+				"float gMatSpecularIntensity = 0.70f;\n"
+				"float gSpecularPower = 0.90f;\n"
 
 				"vec3 LightReflect = normalize(reflect(" UNIF_DS_DLDIRECTION ", Normal));\n"
 				"float SpecularFactor = dot(VertexToEye, LightReflect);\n"

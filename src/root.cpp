@@ -60,7 +60,11 @@ Root::Root(unsigned int w, unsigned int h)
 	, m_rotationSpeed((40.0f * M_PI) / 180.0f)
 	, m_sRGBframebuffer(false)
 	, m_renderWireframe(false)
+#if defined (DO_SHADOW)
 	, m_enableShadows(true)
+#else
+	, m_enableShadows(false)
+#endif
 	, m_shadowmapSize(512)
 #if defined (PIPELINE_DEFERRED)
 	, m_gbuffer_inited(false)
@@ -92,7 +96,7 @@ bool Root::init()
 		return false;
 	}
 
-	m_texture = new Texture::Texture("testPattern.png");
+	m_texture = new Texture::Texture("./media/testPattern.png");
 	if ( !m_texture->getIsReady() )
 	{
 		fprintf(stderr, "ERROR! Texture not ready\n");
@@ -153,15 +157,6 @@ bool Root::init()
 	m_dummySphere = new Object::Object(m_geometries[SPHERE_LOC], mat, gml::identity4());
 	m_dummyQuad = new Object::Object(m_geometries[QUAD_LOC], mat, gml::identity4());
 	initLights();
-#endif
-
-#if defined (DO_SHADOW)
-	for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
-		if (!(*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
-		{
-			fprintf(stderr, "Failed to initialize shadow mapping members.\n");
-			return false;
-		}
 #endif
 
 	printf(
@@ -367,6 +362,15 @@ void Root::initLights()
     l5->LinearAttenuation = 0.0f;        
     l5->ExpAttenuation = 1.0f;
 	m_lights.push_back(l5);
+	
+#if defined (DO_SHADOW)
+	for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
+		if (!(*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
+		{
+			fprintf(stderr, "Failed to initialize shadow mapping members.\n");
+			return false;
+		}
+#endif
 }
 
 //------------------------------------------------------------------------------

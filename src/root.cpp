@@ -157,7 +157,7 @@ bool Root::init()
 
 #if defined (DO_SHADOW)
 	for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
-		if ((*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
+		if (!(*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
 		{
 			fprintf(stderr, "Failed to initialize shadow mapping members.\n");
 			return false;

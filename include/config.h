@@ -9,6 +9,6 @@
 #define PIPELINE_DEFERRED 1
 //#define PIPELINE_DEFERRED_DEBUG 1
 
-#define DO_SHADOW 1
+//#define DO_SHADOW 1
 
 #endif // __INC_CONFIG_H_

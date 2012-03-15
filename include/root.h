@@ -69,7 +69,7 @@ protected:
 	void toggleCameraMoveDirection(bool enable, int direction);
 
 #if defined (PIPELINE_DEFERRED)
-	void initLights();
+	bool initLights();
 	void rasterizeSceneDeferred();
 	void DSGeometryPass();
 #if defined (PIPELINE_DEFERRED_DEBUG)

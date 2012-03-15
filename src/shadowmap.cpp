@@ -134,6 +134,7 @@ bool ShadowMap::init(const unsigned int & smapSize, const Shader::Manager *manag
 	m_manager = manager;
 	m_shadowMapSize = smapSize;
 	m_isReady = glIsTexture(m_shadowmap) == GL_TRUE;
+
 	return !isGLError();
 }
 
@@ -143,7 +144,6 @@ void ShadowMap::create(const ObjectVec & scene, const gml::mat4x4_t &worldview
 					, const gml::vec3_t & position, const gml::vec3_t & target
 					, const gml::vec3_t & up)
 {
-
 	if ( !m_isReady )
 	{
 #if !defined(NDEBUG)
@@ -177,6 +177,7 @@ void ShadowMap::create(const ObjectVec & scene, const gml::mat4x4_t &worldview
 	const Shader::Shader* _pdptshdr = m_manager->getDepthShader();
 
 	if (LT_POINT == m_type)
+	{
 		for (unsigned short i = 0; i < 6; ++i) {
 	
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_shadowmap, 0);
@@ -207,6 +208,7 @@ void ShadowMap::create(const ObjectVec & scene, const gml::mat4x4_t &worldview
 				glFinish();
 			}
 		}
+	}
 	else if (LT_DIRECTIONAL == m_type)
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowmap, 0);

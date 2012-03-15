@@ -20,6 +20,7 @@ Light::Light()
 	, ConstantAttenuation(0.0f)
 	, LinearAttenuation(0.0f)
 	, ExpAttenuation(0.0f)
+	, Shadow(false)
 {
 	mp_shadowmap = new ShadowMap(Type);
 }
@@ -28,6 +29,9 @@ Light::Light()
 
 bool Light::initShadow(const unsigned int & shadow_size, Shader::Manager * shader_manager)
 {
+	if (!Shadow)
+		return false;
+
 	return mp_shadowmap->init(shadow_size, shader_manager);
 }
 
@@ -35,14 +39,20 @@ bool Light::initShadow(const unsigned int & shadow_size, Shader::Manager * shade
 
 void Light::createShadow(const ObjectVec & scene, const Camera &mainCamera)
 {
+	if (!Shadow)
+		return;
+
 	//TODO: complete the function call by sending other arguments.
-	mp_shadowmap->create(scene, mainCamera.getWorldView());
+	mp_shadowmap->create(scene, mainCamera.getWorldView(), Position);
 }
 
 //------------------------------------------------------------------------------
 
 void Light::bindShadow(GLenum textureUnit)
 {
+	if (!Shadow)
+		return;
+
 	mp_shadowmap->bindGL(textureUnit);
 }
 

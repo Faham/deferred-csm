@@ -46,6 +46,7 @@ public:
 	float ConstantAttenuation;
 	float LinearAttenuation;
 	float ExpAttenuation;
+	bool Shadow;
 
 private:
 	ShadowMap* mp_shadowmap;

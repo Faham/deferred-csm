@@ -156,7 +156,8 @@ bool Root::init()
 #if defined (PIPELINE_DEFERRED)
 	m_dummySphere = new Object::Object(m_geometries[SPHERE_LOC], mat, gml::identity4());
 	m_dummyQuad = new Object::Object(m_geometries[QUAD_LOC], mat, gml::identity4());
-	initLights();
+	if (!initLights())
+		return false;
 #endif
 
 	printf(
@@ -312,7 +313,7 @@ void Root::specialKeyboard(UI::KeySpecial_t key, UI::ButtonState_t state)
 
 #if defined (PIPELINE_DEFERRED)
 
-void Root::initLights()
+bool Root::initLights()
 {
 	Light * l1 = new Light();
     l1->Type = LT_SPOT;
@@ -361,8 +362,12 @@ void Root::initLights()
 	l5->ConstantAttenuation = 0.0f;
     l5->LinearAttenuation = 0.0f;        
     l5->ExpAttenuation = 1.0f;
+#if defined (DO_SHADOW)
+    l5->Shadow = true;
+    l5->initShadow(m_shadowmapSize, &m_shaderManager);
+#endif
 	m_lights.push_back(l5);
-	
+/*
 #if defined (DO_SHADOW)
 	for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
 		if (!(*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
@@ -371,6 +376,8 @@ void Root::initLights()
 			return false;
 		}
 #endif
+*/
+	return true;
 }
 
 //------------------------------------------------------------------------------

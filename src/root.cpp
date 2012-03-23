@@ -316,7 +316,7 @@ void Root::specialKeyboard(UI::KeySpecial_t key, UI::ButtonState_t state)
 bool Root::initLights()
 {
 	Light * l1 = new Light();
-    l1->Type = LT_SPOT;
+    l1->setType(LT_SPOT);
     l1->AmbientIntensity = 0.0f;
     l1->DiffuseIntensity = 0.9f;
 	l1->Radiance = Color::WHITE;
@@ -327,56 +327,56 @@ bool Root::initLights()
 	m_lights.push_back(l1);
 
 	Light * l2 = new Light();
-    l2->Type = LT_DIRECTIONAL;
+    l2->setType(LT_DIRECTIONAL);
 	l2->AmbientIntensity = 0.1f;
 	l2->Radiance = Color::WHITE;
 	l2->DiffuseIntensity = 0.5f;
 	l2->Direction = gml::vec3_t(1.0f, 0.0f, 0.0f);
 	m_lights.push_back(l2);
-
+//*
 	Light * l3 = new Light();
-    l3->Type = LT_POINT;
+    l3->setType(LT_POINT);
 	l3->DiffuseIntensity = 0.2f;
 	l3->Radiance = Color::GREEN;
-    l3->Position = gml::vec3_t(0.0f, 1.5f, 5.0f);
+    l3->Position = gml::vec3_t(0.0f, 1.0f, 5.0f);
 	l3->ConstantAttenuation = 0.0f;
     l3->LinearAttenuation = 0.0f;
     l3->ExpAttenuation = 1.0f;
+    l3->Shadow = true;
 	m_lights.push_back(l3);
 
 	Light * l4 = new Light();
-    l4->Type = LT_POINT;
+    l4->setType(LT_POINT);
 	l4->DiffuseIntensity = 0.2f;
 	l4->Radiance = Color::RED;
     l4->Position = gml::vec3_t(2.0f, 0.0f, 5.0f);
 	l4->ConstantAttenuation = 0.0f;
     l4->LinearAttenuation = 0.0f;
     l4->ExpAttenuation = 1.0f;
+    l4->Shadow = true;
 	m_lights.push_back(l4);
-    
+//*/
 	Light * l5 = new Light();
-    l5->Type = LT_POINT;
-	l5->DiffuseIntensity = 0.2f;
+    l5->setType(LT_POINT);
+	l5->DiffuseIntensity = 0.3f;
 	l5->Radiance = Color::BLUE;
-    l5->Position = gml::vec3_t(0.0f, 0.0f, 3.0f);
-	l5->ConstantAttenuation = 0.0f;
+    l5->Position = gml::vec3_t(0.0f, 1.0f, 1.0f);
+	l5->ConstantAttenuation = 1.0f;
     l5->LinearAttenuation = 0.0f;        
     l5->ExpAttenuation = 1.0f;
-#if defined (DO_SHADOW)
     l5->Shadow = true;
-    l5->initShadow(m_shadowmapSize, &m_shaderManager);
-#endif
 	m_lights.push_back(l5);
-/*
+
 #if defined (DO_SHADOW)
 	for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
-		if (!(*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
-		{
-			fprintf(stderr, "Failed to initialize shadow mapping members.\n");
-			return false;
-		}
+		if ((*itr)->Shadow)
+			if (!(*itr)->initShadow(m_shadowmapSize, &m_shaderManager))
+			{
+				fprintf(stderr, "Failed to initialize shadow mapping members.\n");
+				return false;
+			}
 #endif
-*/
+
 	return true;
 }
 
@@ -482,9 +482,10 @@ void Root::DSPointLightsPass()
 		for (LightVec::iterator itr = m_lights.begin(); itr < m_lights.end(); ++itr)
 		{
 			Light& lit = **itr;
-			if (lit.Type != LT_POINT)
+			if (lit.getType() != LT_POINT)
 				continue;
-			lit.bindShadow(GL_TEXTURE3);
+			if (lit.Shadow)
+				lit.bindShadow(GL_TEXTURE3);
 			if (isGLError()) return;
 			shaderUniforms.m_lightPos = gml::extract3(gml::mul(m_camera.getWorldView(), gml::vec4_t(lit.Position, 1.0f)));
 			shaderUniforms.m_lightRad = lit.Radiance;
@@ -501,6 +502,9 @@ void Root::DSPointLightsPass()
 
 			m_dummySphere->rasterize();
 			if (isGLError()) return;
+
+			if (lit.Shadow)
+				lit.unbindShadow(GL_TEXTURE3);
 		}
 		shader->unbindGL();
 	}
@@ -527,7 +531,7 @@ void Root::DSDirectionalLightPass()
 		for (LightVec::iterator itr = m_lights.begin(); itr < m_lights.end(); ++itr)
 		{
 			Light& lit = **itr;
-			if (lit.Type != LT_DIRECTIONAL)
+			if (lit.getType() != LT_DIRECTIONAL)
 				continue;
 			lit.bindShadow(GL_TEXTURE3);
 			if (isGLError()) return;
@@ -685,7 +689,8 @@ void Root::repaint()
 	if (m_enableShadows)
 	{
 		for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
-			(*itr)->createShadow(m_scene, m_camera);
+			if ((*itr)->Shadow)
+				(*itr)->createShadow(m_scene, m_camera);
 		if ( isGLError() ) return;
 	}
 #endif

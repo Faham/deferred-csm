@@ -50,10 +50,10 @@ private:
 	float m_near;
 	float m_far;
 
-	void setupCamera(LightType lt, const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
+	void setupCamera(const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
 		, const gml::vec3_t & target = gml::vec3_t(0, 0, -1)
 		, const gml::vec3_t & up = gml::vec3_t(0, 1, 0));
-		
+
 public:
 	ShadowMap(LightType lt, const gml::vec3_t & position = gml::vec3_t(0, 0, 0)
 		, const gml::vec3_t & target = gml::vec3_t(0, 0, -1)
@@ -72,6 +72,8 @@ public:
 	bool isReady() const { return m_isReady; }
 	void setNear(const float & n) { m_near = n; }
 	void setFar(const float & f) { m_far = f; }
+	void setType(LightType lt) { m_type = lt; setupCamera(); }
+	LightType getType() { return m_type; }
 };
 
 //==============================================================================

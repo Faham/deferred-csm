@@ -1,7 +1,7 @@
 # Build files #
 *.d
 *.o
-FahamNegini-fan780-Deferred-CSM
+fan780-Deferred-CSM
 
 # File editing swaps #
 *~

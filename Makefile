@@ -75,7 +75,7 @@ OBJ_FILES = \
 
 
 # What are we going to call our executable
-OUT_FILE = FahamNegini-fan780-Deferred-CSM
+OUT_FILE = fan780-Deferred-CSM
 
 debug: $(OBJ_FILES)
 	$(CXX) $(CXXFLAGS) $(OBJ_FILES) -o $(OUT_FILE) $(LDFLAGS)

@@ -97,7 +97,7 @@ static const char fragShader[] =
 			"float Attenuation =  " UNIF_DS_ATTENCONSTANT " + " UNIF_DS_ATTENLINEAR " * Distance + " UNIF_DS_ATTENEXP " * Distance * Distance;\n"
 			"Attenuation = min(1.0, Attenuation);\n"
 
-			"FragColor = vec4(clamp(Color * _color / Attenuation, 0.0, 1.0), 1.0);\n"
+			"FragColor = vec4(Color, 1.0) * _color / Attenuation;\n"
 		"}";
 
 PointLightPass::PointLightPass()

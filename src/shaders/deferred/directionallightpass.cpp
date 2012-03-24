@@ -73,7 +73,7 @@ static const char fragShader[] =
 			"}\n"
 			//
 
-			"FragColor = vec4(clamp(Color * (AmbientColor + DiffuseColor + SpecularColor), 0.0, 1.0), 1.0);\n"
+			"FragColor = vec4(Color, 1.0) * (AmbientColor + DiffuseColor + SpecularColor);\n"
 			
 			//"FragColor.x += 1.0;\n"
 		"}";

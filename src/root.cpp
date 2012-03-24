@@ -328,10 +328,11 @@ bool Root::initLights()
 
 	Light * l2 = new Light();
     l2->setType(LT_DIRECTIONAL);
-	l2->AmbientIntensity = 0.1f;
+	l2->AmbientIntensity = 0.4f;
 	l2->Radiance = Color::WHITE;
-	l2->DiffuseIntensity = 0.5f;
-	l2->Direction = gml::vec3_t(1.0f, 0.0f, 0.0f);
+	l2->DiffuseIntensity = 0.8f;
+	l2->Direction = gml::vec3_t(1.0f, -1.0f, 0.0f);
+    l2->Shadow = true;
 	m_lights.push_back(l2);
 //*
 	Light * l3 = new Light();
@@ -533,12 +534,13 @@ void Root::DSDirectionalLightPass()
 			Light& lit = **itr;
 			if (lit.getType() != LT_DIRECTIONAL)
 				continue;
-			lit.bindShadow(GL_TEXTURE3);
+			if (lit.Shadow)
+				lit.bindShadow(GL_TEXTURE3);
 			if (isGLError()) return;
 			shaderUniforms.m_lightRad = lit.Radiance;
 			shaderUniforms.m_ds_AmbientIntensity = lit.AmbientIntensity;
 			shaderUniforms.m_ds_DiffuseIntensity = lit.DiffuseIntensity;
-			shaderUniforms.m_ds_DirectionalLightDirection = gml::extract3(gml::normalize(gml::mul(m_camera.getWorldView(), gml::vec4_t(lit.Direction, 1.0))));
+			shaderUniforms.m_ds_DirectionalLightDirection = gml::extract3(gml::normalize(gml::mul(m_camera.getWorldView(), gml::vec4_t(lit.Direction, 0.0))));
 
 			if ( !shader->setUniforms(shaderUniforms, m_enableShadows) || isGLError() ) return;
 

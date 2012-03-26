@@ -359,11 +359,11 @@ bool Root::initLights()
 //*/
 	Light * l5 = new Light();
     l5->setType(LT_POINT);
-	l5->DiffuseIntensity = 0.3f;
+	l5->DiffuseIntensity = 0.2f;
 	l5->Radiance = Color::BLUE;
-    l5->Position = gml::vec3_t(0.0f, 1.0f, 1.0f);
-	l5->ConstantAttenuation = 1.0f;
-    l5->LinearAttenuation = 0.0f;        
+    l5->Position = gml::vec3_t(1.0f, -1.0f, 5.0f);
+	l5->ConstantAttenuation = 0.0f;
+    l5->LinearAttenuation = 0.0f;
     l5->ExpAttenuation = 1.0f;
     l5->Shadow = true;
 	m_lights.push_back(l5);
@@ -771,7 +771,15 @@ void Root::idle()
 			m_lastCamMoveTime = currTime;
 		}
 	}
-
+/*/
+	const float deltaT = currTime - m_lastIdleTime;
+	for (unsigned int i = 2; i <= 4; ++i)
+	{
+		Light & lit = *m_lights[i];
+		if (0 != deltaT)
+			lit.Position = gml::extract3(gml::mul(gml::rotateYh(0.5f * deltaT * m_rotationSpeed), gml::vec4_t(lit.Position, 1.0)));
+	}
+//*/
 	m_lastIdleTime = currTime;
 }
 

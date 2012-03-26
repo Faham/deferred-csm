@@ -13,4 +13,6 @@
 
 #define USE_ASSIMP	1
 
+#define DO_SMOOTH_SHADOW 1
+
 #endif // __INC_CONFIG_H_

@@ -40,6 +40,9 @@ static const char fragShader[] =
 		"uniform sampler2D " UNIF_DS_POSTEX ";\n"
 		"uniform sampler2D " UNIF_DS_DIFFTEX ";\n"
 		"uniform sampler2D " UNIF_DS_NORMTEX ";\n"
+#if defined (DO_SHADOW)
+		"uniform samplerCubeShadow " UNIF_SHADOWMAP ";\n"
+#endif
 		"out vec4 FragColor;\n"
 		"void main(void) {\n"
 			"vec2 TexCoord = gl_FragCoord.xy / " UNIF_DS_SCREENSIZE ";\n"
@@ -49,8 +52,14 @@ static const char fragShader[] =
 
 			// Lighting Internals
 			"vec3 AmbientColor = " UNIF_LIGHTRAD " * " UNIF_DS_AMBIENTINTENCITY ";\n"
-			"float DiffuseFactor = dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
 
+#if defined (DO_SHADOW)
+			"float notShadow = texture(" UNIF_SHADOWMAP ", vec4(-" UNIF_DS_DLDIRECTION ", 0.0f));\n"
+			//"float DiffuseFactor = notShadow * dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
+			"float DiffuseFactor = dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
+#else
+			"float DiffuseFactor = dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
+#endif
 			"vec3 DiffuseColor  = vec3(0, 0, 0);\n"
 			"vec3 SpecularColor = vec3(0, 0, 0);\n"
 
@@ -59,14 +68,17 @@ static const char fragShader[] =
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
 				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
-
 				"vec3 VertexToEye = normalize(- WorldPos);\n"
 				"float gMatSpecularIntensity = 0.70f;\n"
 				"float gSpecularPower = 0.90f;\n"
 
 				"vec3 LightReflect = normalize(reflect(" UNIF_DS_DLDIRECTION ", Normal));\n"
 				"float SpecularFactor = dot(VertexToEye, LightReflect);\n"
+#if defined (DO_SHADOW)
+				"SpecularFactor = notShadow * pow(SpecularFactor, gSpecularPower);\n"
+#else
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"
+#endif
 				"if (SpecularFactor > 0) {\n"
 					"SpecularColor = " UNIF_LIGHTRAD " * gMatSpecularIntensity * SpecularFactor;\n"
 				"}\n"
@@ -100,7 +112,11 @@ DirectionalLightPass::DirectionalLightPass()
 			(m_program.getUniformID(UNIFORM_DS_SCREENSIZE) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_POSTEX) >= 0) &&
 			(m_program.getUniformID(UNIFORM_DS_DIFFTEX) >= 0) &&
-			(m_program.getUniformID(UNIFORM_DS_NORMTEX) >= 0);
+			(m_program.getUniformID(UNIFORM_DS_NORMTEX) >= 0)
+#if defined (DO_SHADOW)
+			&& (m_program.getUniformID(UNIFORM_SHADOWMAP) >= 0)
+#endif
+			;
 }
 
 DirectionalLightPass::~DirectionalLightPass() {}
@@ -118,6 +134,9 @@ bool DirectionalLightPass::setUniforms(const GLProgUniforms &uniforms, const boo
 	glUniform1i(m_program.getUniformID(UNIFORM_DS_POSTEX), 0);
 	glUniform1i(m_program.getUniformID(UNIFORM_DS_DIFFTEX), 1);
 	glUniform1i(m_program.getUniformID(UNIFORM_DS_NORMTEX), 2);
+#if defined (DO_SHADOW)
+	glUniform1i(m_program.getUniformID(UNIFORM_SHADOWMAP), 3);
+#endif
 
  	return !isGLError();
 }

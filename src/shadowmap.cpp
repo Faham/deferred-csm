@@ -36,15 +36,20 @@ ShadowMap::	ShadowMap(LightType lt, const gml::vec3_t & position
 	m_shadowMapSize = 512;
 	Shader::Manager *m_manager = NULL;
 	m_isReady = false;
-	setupCamera(lt, position, target, up);
+	setupCamera(position, target, up);
 }
 
 //------------------------------------------------------------------------------
 
-void ShadowMap::setupCamera(LightType lt, const gml::vec3_t & position
+void ShadowMap::setupCamera(const gml::vec3_t & position
 						, const gml::vec3_t & target, const gml::vec3_t & up)
 {
-	if (LT_POINT == lt)
+	for (CameraVec::iterator itr = m_cameras.begin(); itr != m_cameras.end(); ++itr)
+		delete *itr;
+	m_cameras.clear();
+
+
+	if (LT_POINT == m_type)
 	{
 		gml::vec3_t _targets[6] = {	gml::vec3_t(1,0,0)
 									, gml::vec3_t(-1,0,0)
@@ -63,16 +68,14 @@ void ShadowMap::setupCamera(LightType lt, const gml::vec3_t & position
 	
 		for (unsigned short i = 0; i < 6; ++i) {
 			Camera* cam = new Camera();
-			
 			cam->lookAt(position, _targets[i], _ups[i]);
 			cam->setFOV(M_PI * 0.5f);
 			cam->setAspect(1.0f);
 			cam->setDepthClip(m_near, m_far);
-			
 			m_cameras.push_back(cam);
 		}
 	}
-	else if (LT_DIRECTIONAL == lt)
+	else if (LT_DIRECTIONAL == m_type)
 	{
 		Camera* cam = new Camera();
 		
@@ -97,6 +100,31 @@ ShadowMap::~ShadowMap()
 
 bool ShadowMap::init(const unsigned int & smapSize, const Shader::Manager *manager)
 {
+/*/
+	glGenFramebuffers(1, &m_fbo);
+
+	glGenTextures(1, &m_shadowmap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_shadowmap);
+	
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	// GL_NEAREST, GL_LINEAR
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);	// GL_NEAREST, GL_LINEAR
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+	for (unsigned short i = 0; i < 6; ++i) 
+		glTexImage2D ( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, smapSize, smapSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	m_manager = manager;
+	m_shadowMapSize = smapSize;
+	m_isReady = glIsTexture(m_shadowmap) == GL_TRUE;
+
+	printf("Light:%i, Is shadowmap ready:%s\n", (int)m_type, m_isReady ? "True": "False");
+
+	return !isGLError();
+/*/
 	glGenFramebuffers(1, &m_fbo);
 
 	glGenTextures(1, &m_shadowmap);
@@ -135,7 +163,10 @@ bool ShadowMap::init(const unsigned int & smapSize, const Shader::Manager *manag
 	m_shadowMapSize = smapSize;
 	m_isReady = glIsTexture(m_shadowmap) == GL_TRUE;
 
+	//printf("Is shadowmap ready:%s\n", m_isReady ? "True": "False");
+
 	return !isGLError();
+//*/
 }
 
 //------------------------------------------------------------------------------

@@ -47,6 +47,15 @@ static const char fragShader[] =
 		"uniform samplerCubeShadow " UNIF_SHADOWMAP ";\n"
 #endif
 		"out vec4 FragColor;\n"
+
+		// The following function can be used to do a projected texture map read
+		// with an offset given in texel units. The variable texmapscale is a 
+		// float2 containing 1/width and 1/height of the shadow map		
+		"float offset_lookup(samplerCubeShadow map, vec4 loc, vec2 offset) {\n"
+		"	float threshold = 0.003f;\n"	// texmapscale
+		"	return texture(map, vec4(loc.xy + offset * vec2(threshold, threshold) * loc.w, loc.z, loc.w));\n"
+		"}\n"
+
 		"void main(void) {\n"
 			"vec2 TexCoord = gl_FragCoord.xy / " UNIF_DS_SCREENSIZE ";\n"
 			"vec3 WorldPos = texture(" UNIF_DS_POSTEX ", TexCoord).xyz;\n"
@@ -59,7 +68,17 @@ static const char fragShader[] =
 			"LightDirection = normalize(LightDirection);\n"
 
 #if defined (DO_SHADOW)
+#if defined (DO_SMOOTH_SHADOW)
+			"float sum = 0;\n"
+			"float x, y;\n"
+			"float resolution = 1.5;"	// default: 1.5
+			" for (y = -resolution; y <= resolution; y += 1.0)\n"
+			"	for (x = -resolution; x <= resolution; x += 1.0)\n"
+			"		sum += offset_lookup(" UNIF_SHADOWMAP ", vec4(-LightDirection, Distance), vec2(x, y));\n"
+			" float notShadow = sum / 16.0f;\n"
+#else
 			" float notShadow = texture(" UNIF_SHADOWMAP ", vec4(-LightDirection, Distance));\n"
+#endif
 #endif
 			// Lighting Internals
 			"vec3 AmbientColor = " UNIF_LIGHTRAD " * " UNIF_DS_AMBIENTINTENCITY ";\n"

@@ -24,10 +24,10 @@ namespace Object
 }
 
 enum LightType {
-	LT_NONE,
-	LT_DIRECTIONAL,
-	LT_POINT,
-	LT_SPOT
+	LT_NONE = 0,
+	LT_DIRECTIONAL = 1,
+	LT_POINT = 2,
+	LT_SPOT = 3
 };
 
 //==============================================================================
@@ -39,7 +39,6 @@ public:
 	gml::vec3_t Position;
 	gml::vec3_t Direction;
 	gml::vec3_t AmbientRadiance;
-	LightType Type;
 	float AmbientIntensity;
 	float DiffuseIntensity;
 	float Cutoff;
@@ -50,6 +49,7 @@ public:
 
 private:
 	ShadowMap* mp_shadowmap;
+	LightType m_type;
 
 public:
 	typedef std::vector<Object::Object*> ObjectVec;
@@ -59,6 +59,9 @@ public:
 	bool initShadow(const unsigned int & shadow_size, Shader::Manager * shader_manager);	
 	void createShadow(const ObjectVec & scene, const Camera &mainCamera);
 	void bindShadow(GLenum textureUnit);
+	void unbindShadow(GLenum textureUnit);
+	void setType(LightType lt);
+	LightType getType() { return m_type;}
 };
 
 //==============================================================================

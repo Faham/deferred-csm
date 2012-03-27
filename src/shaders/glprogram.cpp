@@ -131,6 +131,7 @@ bool GLProgram::init(const char *vertCode, const char *fragCode)
 	m_uniformLocs[UNIFORM_DS_NORMTEX] = glGetUniformLocation(m_prog, UNIF_DS_NORMTEX);
 	m_uniformLocs[UNIFORM_DS_TEXCOORDTEX] = glGetUniformLocation(m_prog, UNIF_DS_TEXCOORDTEX);
 	m_uniformLocs[UNIFORM_DS_SCREENSIZE] = glGetUniformLocation(m_prog, UNIF_DS_SCREENSIZE);
+	m_uniformLocs[UNIFORM_DS_LIGHT_PROJMAT] = glGetUniformLocation(m_prog, UNIF_DS_LIGHT_PROJMAT);
 
 	return true;
 }

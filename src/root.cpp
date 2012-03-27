@@ -96,13 +96,6 @@ bool Root::init()
 		return false;
 	}
 
-	m_texture = new Texture::Texture("./media/testPattern.png");
-	if ( !m_texture->getIsReady() )
-	{
-		fprintf(stderr, "ERROR! Texture not ready\n");
-		return false;
-	}
-
 	m_camera.lookAt(gml::vec3_t(5.0,0.0,5.0), gml::vec3_t(0.0,0.0,0.0) );
 	m_camera.setDepthClip(1.0f, 50.0f);
 
@@ -132,7 +125,12 @@ bool Root::init()
 
 	const float pi2 = (90.0f * M_PI) / 180.0f;
 	const float sz = 15.0f;
-
+	m_texture = new Texture::Texture("./media/wood-as-a-conductor-of-heat-1.png");
+	if ( !m_texture->getIsReady() )
+	{
+		fprintf(stderr, "ERROR! Texture not ready\n");
+		return false;
+	}
 	mat.setTexture(m_texture);
 	mat.setShaderType(Material::PHONG);
 	mat.setSpecExp(16.0f);
@@ -150,8 +148,22 @@ bool Root::init()
 	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,sz/2)), gml::mul(gml::rotateXh(-pi2),gml::scaleh(sz, 1.0, sz)))));
 	m_scene.push_back(new Object::Object(m_geometries[PLANE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,-sz/2)), gml::mul(gml::rotateXh(pi2),gml::scaleh(sz, 1.0, sz)))));
 
-	m_scene.push_back(new Object::Object(m_geometries[SPHERE_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,0.0,0.0)), gml::scaleh(2.5,0.75,1.5))));
-	m_scene.push_back(new Object::Object(m_geometries[OCTAHEDRON_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,1.5,0.0)), gml::scaleh(1.0,1.5,1.0))));
+	m_texture = new Texture::Texture("./media/testPattern.png");
+	if ( !m_texture->getIsReady() )
+	{
+		fprintf(stderr, "ERROR! Texture not ready\n");
+		return false;
+	}
+	mat.setTexture(m_texture);
+	unsigned int count_factor = 4;
+	float scale_factor = 2.0f;
+	float scl = 0.75f;
+	for (unsigned int i = 0; i < count_factor; ++i)
+		for (unsigned int j = 0; j < count_factor; ++j)
+			for (unsigned int k = 0; k < count_factor; ++k)
+				m_scene.push_back(new Object::Object(m_geometries[SPHERE_LOC], mat
+									, gml::mul(gml::translate(gml::scale(scale_factor, gml::vec3_t(i, j, k))), gml::scaleh(scl, scl, scl))));
+	//m_scene.push_back(new Object::Object(m_geometries[OCTAHEDRON_LOC], mat, gml::mul(gml::translate(gml::vec3_t(0.0,1.5,0.0)), gml::scaleh(1.0,1.5,1.0))));
 
 #if defined (PIPELINE_DEFERRED)
 	m_dummySphere = new Object::Object(m_geometries[SPHERE_LOC], mat, gml::identity4());
@@ -315,58 +327,56 @@ void Root::specialKeyboard(UI::KeySpecial_t key, UI::ButtonState_t state)
 
 bool Root::initLights()
 {
-	Light * l1 = new Light();
-    l1->setType(LT_SPOT);
-    l1->AmbientIntensity = 0.0f;
-    l1->DiffuseIntensity = 0.9f;
-	l1->Radiance = Color::WHITE;
-    l1->LinearAttenuation = 0.01f;
-    l1->Position  = gml::vec3_t(-20.0, 20.0, 5.0f);
-    l1->Direction = gml::vec3_t(1.0f, -1.0f, 0.0f);
-    l1->Cutoff =  20.0f;
-	m_lights.push_back(l1);
+	Light * l = new Light();
+    l->setType(LT_SPOT);
+    l->AmbientIntensity = 0.0f;
+    l->DiffuseIntensity = 0.9f;
+	l->Radiance = Color::WHITE;
+    l->LinearAttenuation = 0.01f;
+    l->Position  = gml::vec3_t(-20.0, 20.0, 5.0f);
+    l->Direction = gml::vec3_t(1.0f, -1.0f, 0.0f);
+    l->Cutoff =  20.0f;
+	m_lights.push_back(l);
 
-	Light * l2 = new Light();
-    l2->setType(LT_DIRECTIONAL);
-	l2->AmbientIntensity = 0.4f;
-	l2->Radiance = Color::WHITE;
-	l2->DiffuseIntensity = 0.8f;
-	l2->Direction = gml::vec3_t(1.0f, -1.0f, 0.0f);
-    l2->Shadow = true;
-	m_lights.push_back(l2);
-//*
-	Light * l3 = new Light();
-    l3->setType(LT_POINT);
-	l3->DiffuseIntensity = 0.2f;
-	l3->Radiance = Color::GREEN;
-    l3->Position = gml::vec3_t(0.0f, 1.0f, 5.0f);
-	l3->ConstantAttenuation = 0.0f;
-    l3->LinearAttenuation = 0.0f;
-    l3->ExpAttenuation = 1.0f;
-    l3->Shadow = true;
-	m_lights.push_back(l3);
+	l = new Light();
+    l->setType(LT_DIRECTIONAL);
+	l->AmbientIntensity = 0.5f;
+	l->Radiance = Color::WHITE;
+	l->DiffuseIntensity = 1.0f;
+	l->Direction = gml::vec3_t(0.0f, -1.0f, 0.0f);
+    l->Shadow = true;
+	m_lights.push_back(l);
 
-	Light * l4 = new Light();
-    l4->setType(LT_POINT);
-	l4->DiffuseIntensity = 0.2f;
-	l4->Radiance = Color::RED;
-    l4->Position = gml::vec3_t(2.0f, 0.0f, 5.0f);
-	l4->ConstantAttenuation = 0.0f;
-    l4->LinearAttenuation = 0.0f;
-    l4->ExpAttenuation = 1.0f;
-    l4->Shadow = true;
-	m_lights.push_back(l4);
-//*/
-	Light * l5 = new Light();
-    l5->setType(LT_POINT);
-	l5->DiffuseIntensity = 0.2f;
-	l5->Radiance = Color::BLUE;
-    l5->Position = gml::vec3_t(1.0f, -1.0f, 5.0f);
-	l5->ConstantAttenuation = 0.0f;
-    l5->LinearAttenuation = 0.0f;
-    l5->ExpAttenuation = 1.0f;
-    l5->Shadow = true;
-	m_lights.push_back(l5);
+	float pl_ex_att = 10.0f;
+	float pl_c_att = 0.0f;
+	float pl_lin_att = 0.0f;
+	float dif_int = 1.0f;
+
+	std::vector<gml::vec3_t> colors;
+	colors.push_back(Color::RED);
+	colors.push_back(Color::GREEN);
+	colors.push_back(Color::BLUE);
+	colors.push_back(Color::CYAN);
+	colors.push_back(Color::BEIGE);
+
+	std::vector<gml::vec3_t> positions;
+	for (unsigned int i = 0; i < 3; ++i)
+		for (unsigned int j = 0; j < 3; ++j)
+			for (unsigned int k = 0; k < 3; ++k)
+				positions.push_back(gml::vec3_t(i, j, k));
+	
+	for (unsigned int i = 0; i < 20; ++i) {
+		l = new Light();
+		l->setType(LT_POINT);
+		l->DiffuseIntensity = dif_int;
+		l->Radiance = colors[i % 5];
+		l->Position = gml::scale(3.0f, positions[i]);
+		l->ConstantAttenuation = pl_c_att;
+		l->LinearAttenuation = pl_lin_att;
+		l->ExpAttenuation = pl_ex_att;
+		l->Shadow = false;
+		m_lights.push_back(l);
+	}
 
 #if defined (DO_SHADOW)
 	for (LightVec::iterator itr = m_lights.begin(); itr != m_lights.end(); ++itr)
@@ -534,8 +544,10 @@ void Root::DSDirectionalLightPass()
 			Light& lit = **itr;
 			if (lit.getType() != LT_DIRECTIONAL)
 				continue;
-			if (lit.Shadow)
+			if (lit.Shadow) {
+				shaderUniforms.m_ds_light_projection_mat = lit.getCamProjectionMatrix();
 				lit.bindShadow(GL_TEXTURE3);
+			}
 			if (isGLError()) return;
 			shaderUniforms.m_lightRad = lit.Radiance;
 			shaderUniforms.m_ds_AmbientIntensity = lit.AmbientIntensity;
@@ -771,11 +783,11 @@ void Root::idle()
 			m_lastCamMoveTime = currTime;
 		}
 	}
-/*/
+//*/
 	const float deltaT = currTime - m_lastIdleTime;
-	for (unsigned int i = 2; i <= 4; ++i)
+	for (unsigned int i = 0; i < 20; ++i)
 	{
-		Light & lit = *m_lights[i];
+		Light & lit = *m_lights[i+2];
 		if (0 != deltaT)
 			lit.Position = gml::extract3(gml::mul(gml::rotateYh(0.5f * deltaT * m_rotationSpeed), gml::vec4_t(lit.Position, 1.0)));
 	}

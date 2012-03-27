@@ -62,6 +62,7 @@ public:
 	void unbindShadow(GLenum textureUnit);
 	void setType(LightType lt);
 	LightType getType() { return m_type;}
+	gml::mat4x4_t getCamProjectionMatrix ();
 };
 
 //==============================================================================

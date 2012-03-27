@@ -17,6 +17,8 @@
 #include <glUtils.h>
 #include <config.h>
 
+#undef	DO_SHADOW
+
 namespace Shader
 {
 namespace Deferred
@@ -48,14 +50,16 @@ static const char fragShader[] =
 #endif
 		"out vec4 FragColor;\n"
 
+#if defined (DO_SHADOW)
 #if defined (DO_SMOOTH_SHADOW)
 		// The following function can be used to do a projected texture map read
 		// with an offset given in texel units. The variable texmapscale is a 
 		// float2 containing 1/width and 1/height of the shadow map		
 		"float offset_lookup(samplerCubeShadow map, vec4 loc, vec2 offset) {\n"
-		"	float threshold = 0.003f;\n"	// texmapscale
+		"	float threshold = 0.001f;\n"	// texmapscale
 		"	return texture(map, vec4(loc.xy + offset * vec2(threshold, threshold) * loc.w, loc.z, loc.w));\n"
 		"}\n"
+#endif
 #endif
 
 		"void main(void) {\n"
@@ -83,17 +87,17 @@ static const char fragShader[] =
 #endif
 #endif
 			// Lighting Internals
-			"vec3 AmbientColor = " UNIF_LIGHTRAD " * " UNIF_DS_AMBIENTINTENCITY ";\n"
+			"vec4 AmbientColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_AMBIENTINTENCITY ";\n"
 #if defined (DO_SHADOW)
 			"float DiffuseFactor = notShadow * dot(Normal, -LightDirection);\n"
 #else
 			"float DiffuseFactor = dot(Normal, -LightDirection);\n"
 #endif
-			"vec3 DiffuseColor  = vec3(0, 0, 0);\n"
-			"vec3 SpecularColor = vec3(0, 0, 0);\n"
+			"vec4 DiffuseColor  = vec4(0, 0, 0, 0);\n"
+			"vec4 SpecularColor = vec4(0, 0, 0, 0);\n"
 
 			"if (DiffuseFactor > 0) {\n"
-				"DiffuseColor = " UNIF_LIGHTRAD " * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
+				"DiffuseColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
 				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
@@ -109,16 +113,17 @@ static const char fragShader[] =
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"
 #endif
 				"if (SpecularFactor > 0) {\n"
-					"SpecularColor = " UNIF_LIGHTRAD " * gMatSpecularIntensity * SpecularFactor;\n"
+					"SpecularColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * gMatSpecularIntensity * SpecularFactor;\n"
 				"}\n"
 			"}\n"
 			//
-
-			"vec3 _color = AmbientColor + DiffuseColor + SpecularColor;\n"
-			"float Attenuation =  " UNIF_DS_ATTENCONSTANT " + " UNIF_DS_ATTENLINEAR " * Distance + " UNIF_DS_ATTENEXP " * Distance * Distance;\n"
-			"Attenuation = min(1.0, Attenuation);\n"
-
-			"FragColor = vec4(clamp(Color * _color / Attenuation, 0.0, 1.0), 1.0);\n"
+			"Distance *= 0.3f;\n"
+			"vec4 _color = AmbientColor + DiffuseColor + SpecularColor;\n"
+			"float Attenuation =  " UNIF_DS_ATTENCONSTANT " + " 
+									UNIF_DS_ATTENLINEAR " * Distance + " 
+									UNIF_DS_ATTENEXP " * Distance * Distance;\n"
+			//"Attenuation = min(1.0, Attenuation);\n"
+			"FragColor = vec4(Color, 1.0) * (_color / Attenuation);\n"
 		"}";
 
 PointLightPass::PointLightPass()

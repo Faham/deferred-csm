@@ -41,7 +41,7 @@ void Light::createShadow(const ObjectVec & scene, const Camera &mainCamera)
 		return;
 
 	//TODO: complete the function call by sending other arguments.
-	mp_shadowmap->create(scene, mainCamera.getWorldView(), Position);
+	mp_shadowmap->create(scene, mainCamera.getWorldView(), Position, gml::add(Direction, Position));
 }
 
 //------------------------------------------------------------------------------
@@ -69,6 +69,13 @@ void Light::unbindShadow(GLenum textureUnit)
 void Light::setType(LightType lt)
 { 
 	m_type = lt; mp_shadowmap->setType(lt);
+}
+
+//------------------------------------------------------------------------------
+
+gml::mat4x4_t Light::getCamProjectionMatrix ()
+{ 
+	return mp_shadowmap->getCamProjectionMatrix(); 
 }
 
 //==============================================================================

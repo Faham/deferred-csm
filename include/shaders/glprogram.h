@@ -75,6 +75,7 @@ typedef enum
 #define UNIF_DS_NORMTEX "DSNormalTexture"
 #define UNIF_DS_TEXCOORDTEX "DSTexcoordTexture"
 #define UNIF_DS_SCREENSIZE "DSScreenSize"
+#define UNIF_DS_LIGHT_PROJMAT "DSLightProjectionMatrix"
 
 // enum that gives the offset into the GLProgram::m_uniformLocs[]
 // array to find the handle for a uniform.
@@ -105,6 +106,7 @@ typedef enum
 	UNIFORM_DS_NORMTEX,
 	UNIFORM_DS_TEXCOORDTEX,
 	UNIFORM_DS_SCREENSIZE,
+	UNIFORM_DS_LIGHT_PROJMAT,
 	NUM_UNIFORM_VARS
 } UniformVars;
 
@@ -145,6 +147,8 @@ typedef struct _GLProgUniforms
 	Texture::Texture *m_ds_NormalTexture;
 	Texture::Texture *m_ds_TexcoordTexture;
 	gml::vec2_t m_ds_ScreenSize;
+	gml::mat4x4_t m_ds_light_projection_mat;
+	
 } GLProgUniforms;
 
 class GLProgram

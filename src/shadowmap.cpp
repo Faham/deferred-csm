@@ -100,31 +100,6 @@ ShadowMap::~ShadowMap()
 
 bool ShadowMap::init(const unsigned int & smapSize, const Shader::Manager *manager)
 {
-/*/
-	glGenFramebuffers(1, &m_fbo);
-
-	glGenTextures(1, &m_shadowmap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_shadowmap);
-	
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	// GL_NEAREST, GL_LINEAR
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);	// GL_NEAREST, GL_LINEAR
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-
-	for (unsigned short i = 0; i < 6; ++i) 
-		glTexImage2D ( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, smapSize, smapSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-
-	m_manager = manager;
-	m_shadowMapSize = smapSize;
-	m_isReady = glIsTexture(m_shadowmap) == GL_TRUE;
-
-	printf("Light:%i, Is shadowmap ready:%s\n", (int)m_type, m_isReady ? "True": "False");
-
-	return !isGLError();
-/*/
 	glGenFramebuffers(1, &m_fbo);
 
 	glGenTextures(1, &m_shadowmap);

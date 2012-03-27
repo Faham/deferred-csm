@@ -17,6 +17,8 @@
 #include <glUtils.h>
 #include <config.h>
 
+//#undef DO_SHADOW
+
 namespace Shader
 {
 namespace Deferred
@@ -41,7 +43,8 @@ static const char fragShader[] =
 		"uniform sampler2D " UNIF_DS_DIFFTEX ";\n"
 		"uniform sampler2D " UNIF_DS_NORMTEX ";\n"
 #if defined (DO_SHADOW)
-		"uniform samplerCubeShadow " UNIF_SHADOWMAP ";\n"
+		"uniform sampler2DShadow " UNIF_SHADOWMAP ";\n"
+		"uniform mat4 " UNIF_DS_LIGHT_PROJMAT ";\n"
 #endif
 		"out vec4 FragColor;\n"
 		"void main(void) {\n"
@@ -51,20 +54,21 @@ static const char fragShader[] =
 			"vec3 Normal = texture(" UNIF_DS_NORMTEX ", TexCoord).xyz;\n"
 
 			// Lighting Internals
-			"vec3 AmbientColor = " UNIF_LIGHTRAD " * " UNIF_DS_AMBIENTINTENCITY ";\n"
+			"vec4 AmbientColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_AMBIENTINTENCITY ";\n"
 
 #if defined (DO_SHADOW)
-			"float notShadow = texture(" UNIF_SHADOWMAP ", vec4(-" UNIF_DS_DLDIRECTION ", 0.0f));\n"
-			//"float DiffuseFactor = notShadow * dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
-			"float DiffuseFactor = dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
+			"vec4 shadowtexcoord = " UNIF_DS_LIGHT_PROJMAT " * vec4(WorldPos, 1.0f);\n"
+			"shadowtexcoord /= shadowtexcoord.w;\n"
+			"float notShadow = texture(" UNIF_SHADOWMAP ", shadowtexcoord.xyz);\n"
+			"float DiffuseFactor = notShadow * dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
 #else
 			"float DiffuseFactor = dot(Normal, -" UNIF_DS_DLDIRECTION ");\n"
 #endif
-			"vec3 DiffuseColor  = vec3(0, 0, 0);\n"
-			"vec3 SpecularColor = vec3(0, 0, 0);\n"
+			"vec4 DiffuseColor  = vec4(0, 0, 0, 0);\n"
+			"vec4 SpecularColor = vec4(0, 0, 0, 0);\n"
 
 			"if (DiffuseFactor > 0) {\n"
-				"DiffuseColor = " UNIF_LIGHTRAD " * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
+				"DiffuseColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * " UNIF_DS_DIFFUSEINTENSITY " * DiffuseFactor;\n"
 
 				//TODO: find and replace gEyeWorldPos, gSpecularPower and gMatSpecularIntensity
 				//"vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos);\n"
@@ -80,14 +84,12 @@ static const char fragShader[] =
 				"SpecularFactor = pow(SpecularFactor, gSpecularPower);\n"
 #endif
 				"if (SpecularFactor > 0) {\n"
-					"SpecularColor = " UNIF_LIGHTRAD " * gMatSpecularIntensity * SpecularFactor;\n"
+					"SpecularColor = vec4(" UNIF_LIGHTRAD ", 1.0f) * gMatSpecularIntensity * SpecularFactor;\n"
 				"}\n"
 			"}\n"
 			//
 
-			"FragColor = vec4(clamp(Color * (AmbientColor + DiffuseColor + SpecularColor), 0.0, 1.0), 1.0);\n"
-			
-			//"FragColor.x += 1.0;\n"
+			"FragColor = vec4(Color, 1.0) * (AmbientColor + DiffuseColor + SpecularColor);\n"
 		"}";
 
 DirectionalLightPass::DirectionalLightPass()
@@ -115,6 +117,7 @@ DirectionalLightPass::DirectionalLightPass()
 			(m_program.getUniformID(UNIFORM_DS_NORMTEX) >= 0)
 #if defined (DO_SHADOW)
 			&& (m_program.getUniformID(UNIFORM_SHADOWMAP) >= 0)
+			&& (m_program.getUniformID(UNIFORM_DS_LIGHT_PROJMAT) >= 0)
 #endif
 			;
 }
@@ -136,6 +139,7 @@ bool DirectionalLightPass::setUniforms(const GLProgUniforms &uniforms, const boo
 	glUniform1i(m_program.getUniformID(UNIFORM_DS_NORMTEX), 2);
 #if defined (DO_SHADOW)
 	glUniform1i(m_program.getUniformID(UNIFORM_SHADOWMAP), 3);
+    glUniformMatrix4fv(m_program.getUniformID(UNIFORM_DS_LIGHT_PROJMAT), 1, GL_FALSE, (GLfloat*)&uniforms.m_ds_light_projection_mat);
 #endif
 
  	return !isGLError();

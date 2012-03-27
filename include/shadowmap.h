@@ -74,6 +74,7 @@ public:
 	void setFar(const float & f) { m_far = f; }
 	void setType(LightType lt) { m_type = lt; setupCamera(); }
 	LightType getType() { return m_type; }
+	gml::mat4x4_t getCamProjectionMatrix () { if (m_cameras.size() > 0) return m_cameras[0]->getProjection(); return gml::identity4(); }
 };
 
 //==============================================================================

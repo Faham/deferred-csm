@@ -13,10 +13,10 @@ CXX = g++
 # Version #'s of the program
 
 # Flags for the preprocessor.
-CPPFLAGS = -Iinclude -Idependencies/include/assimp
+CPPFLAGS = -Iinclude
 
 # Our include directories
-LDFLAGS = -Ldependencies/bin -Wl,-Bstatic -lassimp -Wl,-Bdynamic -lGL -lglfw -lm -lXrandr -lpng
+LDFLAGS = -Ldependencies/bin -Wl,-Bstatic -Wl,-Bdynamic -lGL -lglfw -lm -lXrandr -lpng
 
 # Set the compile flags depending on the make target
 
